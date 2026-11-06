@@ -67,15 +67,26 @@ operations does. That also keeps Bonum general: it doesn't have to grow ERP modu
 
 ## 5. Reading across modules
 
-Discussion with Nate (the Sereus maintainer) established that Quereus can already
-address several strands and join between them. The working model is:
+A machine whose party belongs to several strands runs them all on one cadre node, even
+when they belong to different sApps (WyattERP's modules, Bonum). Sereus gives each strand
+its own Quereus `Database`, with that strand's tables in a schema named `App`. Quereus has
+no `ATTACH`. So a cross-strand read works in one of two ways today:
 
-* A node that belongs to several strands opens them in **one Quereus connection, one schema
-  per strand** (`catalog.part`, `ops.move`, `parties.party`…). Queries join across them with
-  qualified names. **Not built yet** (checked November 2026): Sereus gives each strand its
-  own `Database`, so today a cross-strand read is a join in app code. See
-  [../STATUS.md](../STATUS.md) (open items); this section is to be revised after the
-  multi-strand spike.
+* **In app code.** Read each strand, then join the results in `@wyatt/core`.
+* **Through a bridge.** `@wyatt/core` registers a query on one strand as a table-valued
+  function in another strand's `Database`. A single SQL statement can then join them
+  (`… from App.PoLine l join catalog_part() p on p.Id = l.PartId`). The bridge reads the
+  whole remote relation on each call and pushes no predicates down. That is fine for
+  reference data and extracts, and not for large ledgers.
+
+Both were shown in `packages/core/src/multi-strand/` (November 2026). Either way, a module
+reads another module only through `@wyatt/core`, never by naming that module's tables
+directly. That way the mechanism can change without changing callers.
+
+* **Wanted from Sereus (not assumed):** compose several strands into **one `Database`,
+  one schema per strand** (`catalog.Part`, `ops.Move`…), so joins are planned and pushed
+  down. Quereus already supports several schemas in one database. The Sereus side is not
+  built ([../STATUS.md](../STATUS.md), open items).
 * A node that does not belong to a strand cannot read it. Membership is the coarse access
   control (§8).
 * **Planned Sereus enhancement (not assumed for v1):** a read-only **cross-strand view**

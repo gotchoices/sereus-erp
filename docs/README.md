@@ -7,6 +7,7 @@
 | [STATUS.md](STATUS.md) | Phase, next steps, deliverables, decision log, open items, risks |
 | [specs/](specs/README.md) | **The domain contract** (draft 1): architecture, product catalog, engine, operations, purchasing. No UI |
 | [stack.md](stack.md) | The Sereus stack and Bonum as they matter to an ERP |
+| [sereus-requirements.md](sereus-requirements.md) | What WyattERP needs from Sereus: multi-app machines, composing strands, cross-strand views |
 | [alternatives.md](alternatives.md) | Survey of open-source ERPs, and why none fits |
 | [legacy/](legacy/README.md) | Study of the ATI ERP that WyattERP succeeds, and the owner's answers (Q1–Q33) |
 

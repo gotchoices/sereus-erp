@@ -48,6 +48,7 @@ docs/
   STATUS.md      next steps, decision log, open items
   specs/         domain specifications (the contract; no UI)
   stack.md       Sereus and Bonum, as they matter here
+  sereus-requirements.md  what WyattERP needs from Sereus
   alternatives.md  open-source ERP survey
   legacy/        study of the ATI ERP, and the owner's answers to the design questions
 packages/

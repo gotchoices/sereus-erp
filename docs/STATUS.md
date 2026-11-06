@@ -15,11 +15,12 @@ on `ser/chat` (see `ser/chat/docs/app-family.md`):
 |---|---|---|
 | `packages/domain` | `@wyatt/domain` | IDs (ULID), integer quantity and money arithmetic |
 | `packages/bom-engine` | `@wyatt/bom-engine` | The parametric BOM engine. Only the request types and a stub `explode` so far |
-| `packages/core` | `@wyatt/core` | Control logic per module strand. Only the module table so far |
+| `packages/core` | `@wyatt/core` | Control logic per module strand. So far: the module table, and the multi-strand test (`src/multi-strand/`) |
 | `apps/cli` | `@wyatt/cli` | Headless client, the first app target |
 
-TypeScript (NodeNext, strict) and vitest. The Sereus and Quereus packages are not dependencies
-yet. The multi-strand spike adds them to `core`, pinned with `resolutions` the way chat does.
+TypeScript (NodeNext, strict) and vitest. `core` uses the published Sereus stack
+(`@serfab/cadre-core` 1.21, `@quereus/quereus` 4.25, Optimystic 1.25), pinned in the root
+`resolutions` the way chat pins it.
 GUI apps come with the appeus setup. They will go under `apps/<target>` and link to `core`,
 and the specs will move to `design/specs/domain/`.
 
@@ -27,18 +28,30 @@ and the specs will move to `design/specs/domain/`.
 
 There are two next steps, which are independent.
 
-**A. Multi-strand spike** in `packages/core` tests, run before the per-module schemas are
-written because its result may change [specs/architecture.md](specs/architecture.md) §5:
-1. ⬜ Add `@serfab/cadre-core` and `@quereus/quereus`, and an in-process node host like
-   `ser/chat/packages/core/src/testing/node-host.ts`.
-2. ⬜ Two parties. One holds stub `catalog`, `ops` and `books` strands, and both share a
-   `vendor:X` strand.
-3. ⬜ A cross-strand read joined in app code (a PO line in ops against a part in catalog).
-4. ⬜ An idempotent posting from the ops outbox into books. Kill the poster partway through
-   and retry it.
-5. ⬜ A published extract from ops into the vendor strand, read by the vendor's node.
-6. ⬜ Write up the friction as requirements for the Sereus team: composing strands into one
-   `Database`, and cross-strand views.
+**A. Multi-strand test** (a quick experiment; ✅ steps 1–5, November 2026).
+`packages/core/src/multi-strand/multi-strand.test.ts` runs real cadre-core nodes in one
+process. Each module has a stand-in sApp (`sapps.ts`), and every strand is closed. The test
+takes about 5 seconds, and it passed on three runs in a row.
+1. ✅ One machine runs `catalog`, `ops` and `books` strands, **each of a different sApp**,
+   with `strandFilter: { mode: 'all' }`. Each strand is its own `Database`, and none can
+   name another's tables.
+2. ✅ A cross-strand read joined in app code (PO lines in ops priced from parts in catalog).
+3. ✅ The same read as **one SQL query**. `bridge.ts` registers a query on one strand's
+   database as a table-valued function in another's (`… join catalog_part() p on …`).
+   Limits: the whole remote relation is read on each call, nothing is pushed down, the
+   column types are declared by hand, and both strands must be open on the same machine.
+4. ✅ A receipt and its outbox posting are written in one ops transaction. The poster then
+   applies it to books, "crashes" before marking it sent, and retries. There is exactly one
+   books transaction, and books' unique `PostingId` rejects a duplicate.
+5. ✅ A second party (the vendor) joins a closed `vendor` link strand by invitation
+   (`createOpenInvitation` → `publishFormationInvite` → `formStrand` → `addStrand`). We
+   publish an extract of open PO lines into it with one statement that reads ops and
+   catalog through the bridge. The vendor reads the extract, and its bid replicates back to
+   us. The vendor's machine holds only the link strand.
+6. ✅ Requirements for the Sereus team: [sereus-requirements.md](sereus-requirements.md).
+   Next, review it with Nate.
+7. ✅ `foreign-claim.test.ts` documents a hazard in current Sereus: a joiner can claim a
+   strand with a different sApp's schema, and nothing refuses it (§2 of that doc).
 
 **B. BOM engine prototype** in `packages/bom-engine` ([specs/bom-engine.md](specs/bom-engine.md)), checked against
 the 2014 ATI BOM corpus:
@@ -80,7 +93,7 @@ After these two, the build order is:
 | BOM scripting trial in JavaScript | ✅ [legacy/bom-scripting-js.md](legacy/bom-scripting-js.md) |
 | Domain specifications, draft 1 | ✅ [specs/](specs/README.md) |
 | Repository scaffold (yarn workspace: domain, bom-engine, core, cli) | ✅ |
-| Multi-strand spike | ⬜ next |
+| Multi-strand test (packages/core/src/multi-strand) | ✅ steps 1–5 |
 | BOM engine prototype against the 2014 corpus | ⬜ next |
 | Executable Quereus schemas (`schema.qsql` per module) | ⬜ |
 | Appeus project setup (stories, UI specs per target) | ⬜ |
@@ -118,33 +131,30 @@ The reasoning is in [Design.md](Design.md).
 
 ## Open items
 
-* ❓ **Quereus multi-strand mechanism:** how a cadre node attaches several strands as named
-  schemas in one connection ([specs/architecture.md](specs/architecture.md) §5). **Checked
-  against the code, November 2026: not built.**
-  * cadre-core gives each strand its own Quereus `Database` (`strand-database.ts`), and the
-    app tables of every strand sit in a schema with the fixed name `App`.
-  * Quereus has no `ATTACH`. It does support several named schemas in one `Database`, and
-    each `using optimystic(...)` table can name its own network. Those are the pieces such a
-    feature would need, but nothing in Sereus puts them together.
-  * Writes across transactors are explicitly not atomic (optimystic `txn-bridge.ts`).
-
-  Still to ask Nate: whether he meant this unbuilt composition, or joins in app code over
-  separate databases.
-* ❓ **Apps sharing strands.** A party's cadre can run strands for several apps, so WyattERP and
-  Bonum can both work in the strands they have business with. In Sereus, each strand is bound
-  to one sApp: `Strand.Header` pins the sApp ID and a signed schema, and a machine launches a
-  strand only for an app that registered that sApp's config (`addStrand`). See
-  `ser/sereus/docs/architecture.md`, "Strand membership schema" and "Storage replicas".
-  * Working default: each sApp ships one control library (its schema plus the rules that live
-    in code), and every app that touches its strands goes through it. For Bonum's strand that
-    is the planned `bonum-core`, which the owner will extract on the Bonum side. Until then,
-    posting into Bonum has no supported path.
-  * Rules enforced in the schema hold for every app. Rules that live only in app code (Bonum's
-    transaction-balance check, for example) hold only for apps that use the library, so they
-    should move into schema constraints where Quereus can express them.
-  * Open: whether each WyattERP module is its own sApp (one schema per strand, working default)
-    or one sApp with several schemas. Also unverified: whether two apps on one device share a
-    cadre node or each embed their own.
+* ✅ **Quereus multi-strand mechanism.** Sereus gives each strand its own `Database`, with
+  its tables in schema `App`, and Quereus has no `ATTACH`. Cross-strand reads are therefore
+  done in app code or through the table-valued-function bridge
+  ([specs/architecture.md](specs/architecture.md) §5). Putting several strands in one
+  `Database` is requested in [sereus-requirements.md](sereus-requirements.md) §3. Still to ask
+  Nate: whether that composition is what he meant.
+* ❓ **Apps sharing strands** ([sereus-requirements.md](sereus-requirements.md) §2).
+  The owner's view: on mobile, one app per schema matters most. Where apps can share a
+  filesystem, a super-app may act on several sApps' schemas.
+  * **Today:** one process runs one node, and that node can carry strands of any number of
+    sApps (shown in the multi-strand test). Two apps on one machine can't share a node: each
+    app install is its own machine of the party.
+  * **Hazard:** a claim isn't checked against the sApp recorded in `Strand.Header`.
+    Requested Sereus fixes, in order:
+    1. refuse a mismatched claim;
+    2. put the sApp ID on the control `Strand` row;
+    3. a filter that takes a list of sApp IDs;
+    4. register an sApp once per node.
+  * **Working default:** each sApp ships one control library (`@wyatt/core`, the planned
+    `bonum-core`), and every app, a super-app included, goes through it for that sApp's
+    strands. Rules that live only in app code hold only for apps that use the library, so
+    they move into schema constraints where Quereus can express them.
+  * **Open:** whether each WyattERP module is its own sApp (the working default; one schema
+    per strand) or one sApp with several schemas.
 * 🔮 **Cross-strand views** as a Sereus enhancement (requirements to write up for the Sereus
   team).
 * ❓ Costing: FIFO layers are specified; moving average is open
