@@ -49,7 +49,10 @@ manufacturing side worked well. WyattERP keeps its model and replaces the parts 
 
 ## Name
 
-**WyattERP.** WyattERP was also the brand of the library family that ATI
-was built on (wylib, wyseman, wyselib), so this system is a **descendant product within that
-brand**: the Sereus-era successor to those libraries. Sub-names for modules may follow that
-family's naming.
+**WyattERP** is the parent brand, and it has had several incarnations:
+
+* **Legacy:** the wylib, wyseman and wyselib libraries (PostgreSQL and Tcl/Tk), and the ATI
+  ERP built on them.
+* **sereus-erp:** this repository, the Sereus-based incarnation.
+
+Packages use the `@wyatt/` scope. Sub-names for modules may follow the family's naming.

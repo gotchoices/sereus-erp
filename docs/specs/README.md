@@ -17,7 +17,7 @@ deliberately revisable: if one causes trouble in practice, change it here first.
 |---|---|
 | [architecture.md](architecture.md) | Modules and strands, record ownership, cross-strand reads, posting between modules, identifiers, quantities and money, roles, history and migration |
 | [product.md](product.md) | Product catalog: classes, families, versions and minor revisions, parameters, parts and part numbers, packages, BOM lines, routing, notes and QC, interchangeability |
-| [engine.md](engine.md) | The parametric engine: explosion algorithm, script sandbox and host API, depth modes, costing and pricing, determinism, results and stamps, migration from the ATI Tcl corpus |
+| [bom-engine.md](bom-engine.md) | The parametric engine: explosion algorithm, script sandbox and host API, depth modes, costing and pricing, determinism, results and stamps, migration from the ATI Tcl corpus |
 | [operations.md](operations.md) | Locations, documents and moves, statuses, balances, demand and allocation, planning and coverage views, order lines with packages and re-explosion, runs and serials, receiving, shipping, adjustments, postings to Bonum and AR |
 | [purchasing.md](purchasing.md) | Vendors and shops as suppliers, bids and price breaks, purchasing rounds, award by part or by labor, quantity suggestions, PO and run creation, vendor and shop strands |
 
@@ -59,5 +59,5 @@ Read them in that order. `architecture.md` sets the conventions that the rest as
 * AP and AR internals. Only their boundaries with operations and Bonum are specified, in
   [architecture.md](architecture.md) and [operations.md](operations.md).
 * Parties (vendors, customers, employees) beyond the fields operations needs.
-* Storefront and customer self-configuration: they are consumers of [engine.md](engine.md).
+* Storefront and customer self-configuration: they are consumers of [bom-engine.md](bom-engine.md).
 * CRM, HR and payroll: outside the ERP core.

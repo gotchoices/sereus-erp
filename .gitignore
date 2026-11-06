@@ -23,3 +23,12 @@ __pycache__/
 .vscode/
 *.swp
 .DS_Store
+
+# Yarn local install state
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+package-lock.json

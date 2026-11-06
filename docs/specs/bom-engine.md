@@ -1,6 +1,6 @@
-# Parametric engine
+# Parametric BOM engine
 
-A shared library (`@wyatt/engine`, [architecture.md](architecture.md) §11). It has no
+A shared library (`@wyatt/bom-engine`, [architecture.md](architecture.md) §11). It has no
 storage, UI or network access of its own. It evaluates catalog definitions
 ([product.md](product.md)) and returns results. Everything else (order entry, purchasing,
 runs, the storefront, cost reports, AI assistants) calls it.

@@ -1,0 +1,27 @@
+{
+  "name": "@wyatt/cli",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Headless command-line client over @wyatt/core.",
+  "type": "module",
+  "main": "./dist/main.js",
+  "bin": {
+    "wyatt": "./dist/main.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@wyatt/core": "workspace:^"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.17"
+  }
+}

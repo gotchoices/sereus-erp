@@ -66,8 +66,8 @@ Identified by (family, `ver`), where `ver` is an integer ≥ 1.
 | change_summary | What changed and why |
 | compat_notes | Consequences of mixing versions: which versions are fine for replacements, which are not for new installs, and so on |
 | spec | Specification text (markdown) |
-| family_script | Script run once per explosion node, before the lines ([engine.md](engine.md) §4) |
-| price_formula | Expression giving the sell price of a configuration ([engine.md](engine.md) §9) |
+| family_script | Script run once per explosion node, before the lines ([bom-engine.md](bom-engine.md) §4) |
+| price_formula | Expression giving the sell price of a configuration ([bom-engine.md](bom-engine.md) §9) |
 | explode_default | Default depth for this family when exploded from an order: `to_part` for packages, `none` for parts |
 
 **Invariants**
@@ -107,7 +107,7 @@ Per version, ordered by `pos`:
 | child_version | Optional pin to a specific child version. Normally empty, meaning "current" |
 | comment | Shown on BOM reports and travelers |
 
-The language of expressions and scripts is defined in [engine.md](engine.md).
+The language of expressions and scripts is defined in [bom-engine.md](bom-engine.md).
 
 ### Operation and Process (routing)
 * **Operation:** a catalog of kinds of work: `code` and description (for example cut, burn,
@@ -152,7 +152,7 @@ An **approved parameter combination** of a family whose class kind is `part` or 
 
 ### PartVersion (derived)
 For each part and each released family version: the **explosion hash** (the hash of a
-one-level explosion of that part under that version, [engine.md](engine.md) §10) and the
+one-level explosion of that part under that version, [bom-engine.md](bom-engine.md) §10) and the
 **effective interchangeability** with the previous version (§6). The system maintains it when
 a version is released. It is not edited by hand.
 
@@ -258,7 +258,7 @@ Options are expressed in the BOM, not as a variant matrix:
 * Every line's `component` refers to an existing family, and the child parameter list has the
   child family's parameter count (checked against the version that would be used).
 * Parameter names are unique within a version and do not collide with reserved names
-  ([engine.md](engine.md) §6).
+  ([bom-engine.md](bom-engine.md) §6).
 * No family can reach itself through its lines with the same parameters. The engine detects
   cycles at run time. Static checks warn about family-level cycles.
 * Release validation explosions all succeed.

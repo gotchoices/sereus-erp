@@ -72,8 +72,10 @@ address several strands and join between them. The working model is:
 
 * A node that belongs to several strands opens them in **one Quereus connection, one schema
   per strand** (`catalog.part`, `ops.move`, `parties.party`…). Queries join across them with
-  qualified names. **Verify:** the exact mechanism (how a strand database is attached as a
-  named schema in a cadre node), before implementation.
+  qualified names. **Not built yet** (checked November 2026): Sereus gives each strand its
+  own `Database`, so today a cross-strand read is a join in app code. See
+  [../STATUS.md](../STATUS.md) (open items); this section is to be revised after the
+  multi-strand spike.
 * A node that does not belong to a strand cannot read it. Membership is the coarse access
   control (§8).
 * **Planned Sereus enhancement (not assumed for v1):** a read-only **cross-strand view**
@@ -134,7 +136,7 @@ Bank reconciliation stays in Bonum.
 
   Display divides by the scale.
 * The engine computes in floating point and rounds at its boundary (see
-  [engine.md](engine.md) §8). Nothing downstream of the engine uses floating point for
+  [bom-engine.md](bom-engine.md) §8). Nothing downstream of the engine uses floating point for
   stored values.
 * Unit prices may need more precision than the currency's minor unit (for example
   $0.00067 per meter of hose). Unit prices are therefore stored with their own scale (default
@@ -180,12 +182,21 @@ roles are named in each spec (for example `buyer`, `receiver`, `shop`, `engineer
 
 ## 11. Shared libraries
 
-* `@wyatt/engine`: the parametric engine ([engine.md](engine.md)). It is a pure library with
-  no storage of its own, used by every interface, by back-end jobs and, if useful, registered
-  in Quereus as a deterministic scalar function (Quereus supports synchronous
-  `createScalarFunction` with a `deterministic` flag).
+The packages live under `packages/` in this repository. Apps (under `apps/`) are thin layers
+over them.
+
+* `@wyatt/bom-engine`: the parametric BOM engine ([bom-engine.md](bom-engine.md)). It is a
+  pure library with no storage of its own, used by every interface, by back-end jobs and, if
+  useful, registered in Quereus as a deterministic scalar function (Quereus supports
+  synchronous `createScalarFunction` with a `deterministic` flag). Other computational modules
+  that come later get their own specifically named packages, not a general "engine".
 * `@wyatt/domain`: shared types, quantity and money arithmetic, ID generation and partname
   parsing.
+* `@wyatt/core`: the control logic for each module's strand: its schema, queries, writes,
+  role-checked transitions, outbox and poster. It is handed a running Sereus node and never
+  builds one; apps do that. Any app that works in a module's strand goes through this package,
+  so the strand's rules live in one place (see §5 and [../STATUS.md](../STATUS.md) on apps
+  sharing strands).
 
 ## 12. Performance notes
 

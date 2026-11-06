@@ -1,0 +1,16 @@
+{
+  "name": "sereus-erp",
+  "private": true,
+  "description": "WyattERP on Sereus. Workspace root for packages/* and the headless apps; see README.md.",
+  "packageManager": "yarn@4.3.1",
+  "workspaces": [
+    "packages/*",
+    "apps/cli"
+  ],
+  "scripts": {
+    "build": "yarn workspaces foreach --all --topological --exclude sereus-erp run build",
+    "test": "yarn workspaces foreach --all --topological --exclude sereus-erp run test",
+    "typecheck": "yarn workspaces foreach --all --topological --exclude sereus-erp run typecheck",
+    "cli": "yarn workspace @wyatt/cli build && node apps/cli/dist/main.js"
+  }
+}

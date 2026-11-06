@@ -1,0 +1,31 @@
+{
+  "name": "@wyatt/bom-engine",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The parametric BOM engine: pure, deterministic explosion of catalog definitions (docs/specs/bom-engine.md).",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@wyatt/domain": "workspace:^"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.17"
+  }
+}

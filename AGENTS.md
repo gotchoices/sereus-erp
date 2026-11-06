@@ -2,8 +2,10 @@
 
 ## Orientation
 
-WyattERP is a parametric manufacturing ERP on Sereus, the successor to the ATI ERP. It is in
-the **design phase**: there are specifications and no code yet.
+WyattERP is a parametric manufacturing ERP and the parent brand of this project. This repository,
+`sereus-erp`, is its Sereus-based incarnation and the successor to the ATI ERP. It is in the
+**design phase**: there are specifications and a yarn workspace scaffold (`packages/`, `apps/`)
+with no domain logic yet. The layout is in [docs/STATUS.md](docs/STATUS.md).
 
 "The owner" in these docs is the project's author and decision-maker, who also wrote the ATI
 ERP and the wylib/wyseman/wyselib libraries.
@@ -17,7 +19,7 @@ To get up to speed, read in this order:
    conventions the others assume.
 
 Read [docs/legacy/](docs/legacy/README.md) when an **ATI:** note or a Q number needs context,
-or when working on the engine's corpus migration.
+or when working on the BOM engine's corpus migration.
 
 These documents are meant to be complete. If you learn something a later agent would need, put
 it in them (usually STATUS.md or the relevant spec), not only in your reply.
@@ -53,8 +55,8 @@ it in them (usually STATUS.md or the relevant spec), not only in your reply.
   New questions for the owner go in a new lettered section at the end of that file, for the owner to
   answer inline. Summarize them in your reply.
 * Confirm Sereus and Quereus capabilities against their own docs (`ser/sereus/docs`,
-  `ser/quereus/docs`) before relying on them. The cross-strand join mechanism is unverified;
-  see STATUS.md.
+  `ser/quereus/docs`) before relying on them. Cross-strand joins in one connection are not
+  built in Sereus today; see STATUS.md.
 * Bonum (`ser/bonum`) is the accounting system and its conventions (integer money, unit model,
   ULID-style IDs) are followed here. WyattERP posts to Bonum and never writes Bonum's tables
   directly.
