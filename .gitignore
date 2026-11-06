@@ -1,0 +1,25 @@
+# Legacy ATI data and schema: private, local only, never committed
+# (see docs/legacy/data-2014.md for how to re-create the extract)
+data/
+*.sch
+*.tgz
+
+# Scratch
+tmp/
+
+# Dependencies and builds
+node_modules/
+dist/
+build/
+.svelte-kit/
+__pycache__/
+
+# Environment
+.env
+.env.local
+
+# IDE and OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
