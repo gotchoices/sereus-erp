@@ -77,6 +77,9 @@ founds a catalog strand and fills it with a small sample hydroponics catalog. De
 folder to start over. `yarn dev:mock` runs on an in-memory catalog instead, with
 `?variant=happy|empty|error` for review states.
 
+`yarn dev_loop [port]` (default 5174) runs the dev server and starts it again whenever it
+exits, on the same port; kill the server process to restart it, Ctrl-C to end the loop.
+
 ## Built on
 
 * [Sereus](../sereus): strands, cadres and the peer-to-peer fabric

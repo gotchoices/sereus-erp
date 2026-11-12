@@ -11,7 +11,8 @@
     "typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "test": "echo \"no web tests yet\"",
     "start": "node build",
-    "dev:mock": "WYATT_DATA=memory vite dev"
+    "dev:mock": "WYATT_DATA=memory vite dev",
+    "dev_loop": "scripts/dev-loop.sh"
   },
   "devDependencies": {
     "@sveltejs/adapter-node": "^5.0.0",

@@ -22,6 +22,7 @@
 			This device only
 		{/if}
 	</span>
+	<a href={q('/settings')} class="section" aria-current={page.url.pathname.startsWith('/settings') ? 'page' : undefined}>Settings</a>
 </header>
 
 <main>
