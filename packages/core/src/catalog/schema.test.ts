@@ -1,5 +1,5 @@
 /**
- * The catalog schema's rules (docs/specs/catalog.qsql, product.md), applied to an in-memory
+ * The catalog schema's rules (design/specs/domain/catalog.qsql, product.md), applied to an in-memory
  * Quereus database. Each test states one rule and checks both that a valid write is accepted
  * and that the violating one is refused.
  */

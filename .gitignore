@@ -33,5 +33,12 @@ __pycache__/
 !.yarn/versions
 package-lock.json
 
-# Generated from docs/specs/*.qsql at build time
+# Generated from design/specs/domain/*.qsql at build time
 packages/core/src/generated/
+/appeus
+design/AGENTS.md
+design/**/AGENTS.md
+apps/*/AGENTS.md
+design/stories/README.md
+design/specs/README.md
+design/specs/*/README.md

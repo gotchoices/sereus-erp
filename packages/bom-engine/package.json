@@ -2,7 +2,7 @@
   "name": "@wyatt/bom-engine",
   "version": "0.0.0",
   "private": true,
-  "description": "The parametric BOM engine: pure, deterministic explosion of catalog definitions (docs/specs/bom-engine.md).",
+  "description": "The parametric BOM engine: pure, deterministic explosion of catalog definitions (design/specs/domain/bom-engine.md).",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

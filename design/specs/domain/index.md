@@ -2,13 +2,12 @@
 
 The **domain contract** for WyattERP: data model, rules, invariants and behavior that every
 user interface (sales configurator, product editor, purchasing, shop floor, receiving,
-storefront) and every back end must honor. **No UI is specified here.** Screens are written
-per target later, following the appeus layout (`design/specs/<target>/…`). These files are
-written to move unchanged into an appeus project as `design/specs/domain/`.
+storefront) and every back end must honor. **No UI is specified here.** Screens, navigation
+and UI rules are in each target's specs (`design/specs/<target>/…`).
 
 Status: **draft 1** (November 2026). The working premises and their reasoning are in
-[../Design.md](../Design.md) and [../STATUS.md](../STATUS.md) (decision log). "Q29" and similar
-refer to the owner's answers in [../legacy/Questions.md](../legacy/Questions.md). The premises are
+[docs/Design.md](../../../docs/Design.md) and [docs/STATUS.md](../../../docs/STATUS.md) (decision log). "Q29" and similar
+refer to the owner's answers in [docs/legacy/Questions.md](../../../docs/legacy/Questions.md). The premises are
 deliberately revisable: if one causes trouble in practice, change it here first.
 
 ## Files
@@ -28,11 +27,11 @@ Read them in that order. `architecture.md` sets the conventions that the rest as
 
 * **MUST / SHOULD / MAY** have their usual meanings. "Invariant" means a rule that the data
   layer enforces (a constraint, an assertion or a role-limited view), not only the UI.
-* Field lists name the *meaning* of each field. Types are indicative. The executable Quereus
-  DDL (`schema.qsql` per module) is written when implementation starts, and it mirrors these
-  files.
+* Field lists name the *meaning* of each field. Types are indicative. Each module's
+  executable Quereus schema sits beside its spec (`catalog.qsql` for product.md) and is the
+  exact form of its invariants. The build generates `@wyatt/core`'s schema constants from it.
 * **ATI:** notes record what the old system did and why something differs. They are context,
-  not requirements. Background is in [../legacy/](../legacy/README.md).
+  not requirements. Background is in [docs/legacy/](../../../docs/legacy/README.md).
 * **Open:** marks a decision deliberately left for later, with the working default stated.
 
 ## Glossary

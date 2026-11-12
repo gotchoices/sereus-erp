@@ -86,7 +86,7 @@ directly. That way the mechanism can change without changing callers.
 * **Wanted from Sereus (not assumed):** compose several strands into **one `Database`,
   one schema per strand** (`catalog.Part`, `ops.Move`…), so joins are planned and pushed
   down. Quereus already supports several schemas in one database. The Sereus side is not
-  built ([../STATUS.md](../STATUS.md), open items).
+  built ([docs/STATUS.md](../../../docs/STATUS.md), open items).
 * A node that does not belong to a strand cannot read it. Membership is the coarse access
   control (§8).
 * **Planned Sereus enhancement (not assumed for v1):** a read-only **cross-strand view**
@@ -206,7 +206,7 @@ over them.
 * `@wyatt/core`: the control logic for each module's strand: its schema, queries, writes,
   role-checked transitions, outbox and poster. It is handed a running Sereus node and never
   builds one; apps do that. Any app that works in a module's strand goes through this package,
-  so the strand's rules live in one place (see §5 and [../STATUS.md](../STATUS.md) on apps
+  so the strand's rules live in one place (see §5 and [docs/STATUS.md](../../../docs/STATUS.md) on apps
   sharing strands).
   * Each module has its own entry point (`@wyatt/core/catalog`), so an app loads only the
     modules it uses. Results and errors are shared: an operation returns a `Result`, and a

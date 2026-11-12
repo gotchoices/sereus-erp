@@ -21,15 +21,16 @@ on `ser/chat` (see `ser/chat/docs/app-family.md`):
 TypeScript (NodeNext, strict) and vitest. `core` uses the published Sereus stack
 (`@serfab/cadre-core` 1.21, `@quereus/quereus` 4.25, Optimystic 1.25), pinned in the root
 `resolutions` the way chat pins it.
-**Adding a module** (parties, ops…): write `docs/specs/<module>.qsql` (the build generates
+**Adding a module** (parties, ops…): write `design/specs/domain/<module>.qsql` (the build generates
 `<MODULE>_SCHEMA` from every `.qsql` there), then `packages/core/src/<module>/` with its sApp
 config, model interface, implementation and contract suite, and an entry point
 `./<module>` in core's `package.json`. `src/catalog/` is the pattern.
 
-GUI apps come with the appeus setup: one appeus project at this repository's root, one
-target per tool and platform under `apps/<target>` (for example `apps/product`), with the
-specs moved to `design/specs/domain/`. Tools are not modules: a vendor tool works in parties
-and ops, so the per-module boundary is `@wyatt/core/<module>`, not the app folder.
+**Appeus** (installed November 2026, hosted mode): `design/` holds the project decisions
+(`design/specs/project.md`), the domain contract (`design/specs/domain/`, moved from
+`docs/specs/`), and stories and UI specs per target. App targets go under `apps/<target>`
+beside `apps/cli`. One ERP app per platform (`web`, `mobile`), each module a section of it
+(decision log). The per-module boundary is `@wyatt/core/<module>`, not the app folder.
 
 ## Resume here
 
@@ -60,7 +61,7 @@ takes about 5 seconds, and it passed on three runs in a row.
 7. ✅ `foreign-claim.test.ts` documents a hazard in current Sereus: a joiner can claim a
    strand with a different sApp's schema, and nothing refuses it (§2 of that doc).
 
-**B. BOM engine prototype** in `packages/bom-engine` ([specs/bom-engine.md](specs/bom-engine.md)), checked against
+**B. BOM engine prototype** in `packages/bom-engine` ([domain/bom-engine.md](../design/specs/domain/bom-engine.md)), checked against
 the 2014 ATI BOM corpus:
 
 1. ⬜ QuickJS-wasm sandbox (`quickjs-emscripten`): one fresh scope per node, host API (§6),
@@ -82,7 +83,7 @@ The extract is local-only and git-ignored. If it is missing, re-create it with t
 
 **C. Product manager** (the prodim successor). Build this now: it lives in one strand, and
 needs no cross-strand joins, postings or Bonum.
-1. ✅ Catalog schema [specs/catalog.qsql](specs/catalog.qsql). It is generated into
+1. ✅ Catalog schema [domain/catalog.qsql](../design/specs/domain/catalog.qsql). It is generated into
    `@wyatt/core` (`CATALOG_SCHEMA`, `catalogSAppConfig()`). `packages/core/src/catalog/`
    tests each rule in memory, and the main ones on a real strand.
 2. ✅ Catalog model `@wyatt/core/catalog` (`src/catalog/`): `CatalogModel` (model.ts) with
@@ -98,9 +99,15 @@ needs no cross-strand joins, postings or Bonum.
    * **Read side kept small** until the UI stories say which queries the screens need.
 3. ⬜ Hydroponics product line as the first real data set (small). The ATI 2014 corpus is
    loaded only as a volume test and a test of BOM scripting, never as working data.
-4. ⬜ Appeus setup and the product-manager UI. Before the UI: stories from the owner
-   (hydroponics use), and three prodim topics product.md lacks: generic and custom
-   "reserve" basenames, document templates, finding documents.
+4. 🔄 Appeus setup and the product section of the ERP app.
+   * ✅ Appeus installed at the repository root (hosted mode); domain specs moved to
+     `design/specs/domain/`.
+   * 🔄 `design/specs/project.md` proposed (web in SvelteKit first, mobile in React Native
+     later; offline mode; screens on `@wyatt/core` only). Awaiting the owner's approval.
+   * ⬜ `add-app.sh` for `web`; stories in `design/stories/web/` (owner); web navigation and
+     screen specs; then screens one vertical slice at a time.
+   * ⬜ Before the UI: three prodim topics product.md lacks: generic and custom "reserve"
+     basenames, document templates, finding documents.
 
 After these, the build order is:
 1. catalog module (C above);
@@ -120,11 +127,11 @@ After these, the build order is:
 | Sereus and Bonum fit | ✅ [stack.md](stack.md) |
 | Targeted extract of the 2014 production dump | ✅ local only: [legacy/data-2014.md](legacy/data-2014.md) |
 | BOM scripting trial in JavaScript | ✅ [legacy/bom-scripting-js.md](legacy/bom-scripting-js.md) |
-| Domain specifications, draft 1 | ✅ [specs/](specs/README.md) |
+| Domain specifications, draft 1 | ✅ [domain/](../design/specs/domain/index.md) |
 | Repository scaffold (yarn workspace: domain, bom-engine, core, cli) | ✅ |
 | Multi-strand test (packages/core/src/multi-strand) | ✅ steps 1–5 |
 | BOM engine prototype against the 2014 corpus | ⬜ next |
-| Catalog schema ([specs/catalog.qsql](specs/catalog.qsql)), tested in memory and on a strand | ✅ |
+| Catalog schema ([domain/catalog.qsql](../design/specs/domain/catalog.qsql)), tested in memory and on a strand | ✅ |
 | Catalog model (`@wyatt/core/catalog`), one contract suite in memory and on a strand | ✅ |
 | Executable schemas of the other modules | ⬜ |
 | Appeus project setup (stories, UI specs per target) | ⬜ |
@@ -172,7 +179,7 @@ The reasoning is in [Design.md](Design.md).
 * 🔄 **Allocating part numbers across devices.** Owner's rule (November 2026): partnames
   for engineering, part numbers for commerce. A number is issued only when something needs
   one, and an operation that needs it is blocked until the number is confirmed
-  ([specs/product.md](specs/product.md) §3). Numbers are in their own insert-only table,
+  ([domain/product.md](../design/specs/domain/product.md) §3). Numbers are in their own insert-only table,
   `PartNumber`, so that approval and numbering are separate writes.
   * **No sequences, by design.** Quereus has no sequence or auto-increment objects
     (`ser/quereus/docs/architecture.md`, "Sequential ID Generation"): validators re-execute
@@ -203,7 +210,7 @@ The reasoning is in [Design.md](Design.md).
 * ✅ **Quereus multi-strand mechanism.** Sereus gives each strand its own `Database`, with
   its tables in schema `App`, and Quereus has no `ATTACH`. Cross-strand reads are therefore
   done in app code or through the table-valued-function bridge
-  ([specs/architecture.md](specs/architecture.md) §5). Putting several strands in one
+  ([domain/architecture.md](../design/specs/domain/architecture.md) §5). Putting several strands in one
   `Database` is requested in [sereus-requirements.md](sereus-requirements.md) §3. Still to ask
   Nate: whether that composition is what he meant.
 * ❓ **Apps sharing strands** ([sereus-requirements.md](sereus-requirements.md) §2).
@@ -227,7 +234,7 @@ The reasoning is in [Design.md](Design.md).
 * 🔮 **Cross-strand views** as a Sereus enhancement (requirements to write up for the Sereus
   team).
 * ❓ Costing: FIFO layers are specified; moving average is open
-  ([specs/operations.md](specs/operations.md)).
+  ([domain/operations.md](../design/specs/domain/operations.md)).
 * ❓ Separation of duties between approvers (for example award vs. payment approval).
 * 🔮 Archiving very old done moves into period summaries (not needed at startup volume).
 * ⬜ AP and AR internals: only their boundaries are specified.

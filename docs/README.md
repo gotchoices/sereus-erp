@@ -5,7 +5,7 @@
 | [Vision.md](Vision.md) | What WyattERP is, goals, product strategy, constraints, name |
 | [Design.md](Design.md) | Why the design is what it is: lessons from ATI, the engine outside the database, versions, demand and coverage, modules as strands |
 | [STATUS.md](STATUS.md) | Phase, next steps, deliverables, decision log, open items, risks |
-| [specs/](specs/README.md) | **The domain contract** (draft 1): architecture, product catalog, engine, operations, purchasing. No UI |
+| [domain/](../design/specs/domain/index.md) | **The domain contract** (draft 1): architecture, product catalog, engine, operations, purchasing. No UI |
 | [stack.md](stack.md) | The Sereus stack and Bonum as they matter to an ERP |
 | [sereus-requirements.md](sereus-requirements.md) | What WyattERP needs from Sereus: multi-app machines, composing strands, cross-strand views |
 | [alternatives.md](alternatives.md) | Survey of open-source ERPs, and why none fits |

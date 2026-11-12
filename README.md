@@ -46,11 +46,13 @@ docs/
   Vision.md      goals, product strategy, constraints
   Design.md      design rationale
   STATUS.md      next steps, decision log, open items
-  specs/         domain specifications (the contract; no UI)
   stack.md       Sereus and Bonum, as they matter here
   sereus-requirements.md  what WyattERP needs from Sereus
   alternatives.md  open-source ERP survey
   legacy/        study of the ATI ERP, and the owner's answers to the design questions
+design/          appeus project: project decisions, stories and UI specs per target
+  specs/domain/  domain specifications (the contract shared by every target; no UI)
+mock/            mock data for UI variants (appeus)
 packages/
   domain/        @wyatt/domain: IDs, quantity and money arithmetic
   bom-engine/    @wyatt/bom-engine: the parametric BOM engine (pure, deterministic)

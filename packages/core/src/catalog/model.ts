@@ -1,6 +1,6 @@
 /**
  * `CatalogModel`: everything an app can read and do in the catalog strand, behind one
- * interface (docs/specs/product.md). There is one implementation, written against the
+ * interface (design/specs/domain/product.md). There is one implementation, written against the
  * strand's Quereus `Database` (`createCatalogModel`). It runs on a real strand
  * (`openStrandCatalog`) or on a local in-memory database built from the same schema
  * (`openMemoryCatalog`), for UI work, demos and tests. Both enforce exactly the rules in

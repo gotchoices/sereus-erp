@@ -95,7 +95,7 @@ explosions.**
 * **A field is either an expression or a block of statements, with no marker needed.** Its
   result is the JavaScript completion value: the value of the last expression statement
   executed. This was verified in a trial port of real ATI scripts
-  ([../legacy/bom-scripting-js.md](../legacy/bom-scripting-js.md)).
+  ([docs/legacy/bom-scripting-js.md](../../../docs/legacy/bom-scripting-js.md)).
 * Scripts are synchronous. The sandbox does not provide `async`, timers, promises, I/O,
   `Date`, `Math.random`, `eval` or `Function`. `Math` otherwise stays available.
 * The sandbox has **no access to the host** except the host API (§6). It runs with a memory
@@ -218,7 +218,7 @@ interfaces can show the path.
 ## 12. Migration of the ATI corpus
 
 The 2014 `prd_spread` table (26,905 lines in 4,587 families, in the local, git-ignored
-`data/ati-2014/`; see [../legacy/data-2014.md](../legacy/data-2014.md)) is the
+`data/ati-2014/`; see [docs/legacy/data-2014.md](../../../docs/legacy/data-2014.md)) is the
 **regression corpus**.
 
 1. **Translator** (Tcl → JavaScript), mostly mechanical:

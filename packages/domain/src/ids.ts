@@ -1,5 +1,5 @@
 // Record IDs: opaque text, globally unique, sortable by creation time
-// (docs/specs/architecture.md §4). ULID format: 48-bit millisecond time, then 80 random
+// (design/specs/domain/architecture.md §4). ULID format: 48-bit millisecond time, then 80 random
 // bits, in Crockford base32 (26 characters).
 
 // Web Crypto, present in browsers and Node; typed here so the package needs no DOM or Node types.

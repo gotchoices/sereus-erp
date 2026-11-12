@@ -1,6 +1,6 @@
 # Design rationale
 
-Explains *why* the specifications ([specs/](specs/README.md)) look the way they do. The specs
+Explains *why* the specifications ([domain/](../design/specs/domain/index.md)) look the way they do. The specs
 are the contract, and this file is the reasoning behind it. References like "Q29" are the owner's
 answers in [legacy/Questions.md](legacy/Questions.md). What ATI did, and what we learned from
 it, is in [legacy/Findings.md](legacy/Findings.md).
@@ -108,7 +108,7 @@ A working premise agreed in November 2026, to be revisited if it causes trouble:
 * Notes, QC criteria and documents change through **automatic minor revisions**. Runs record
   the version and minor revision they were built under.
 
-Detail: [specs/product.md](specs/product.md) §3–6.
+Detail: [domain/product.md](../design/specs/domain/product.md) §3–6.
 
 ## 4. Demand, allocation and coverage
 
@@ -124,7 +124,7 @@ covers all outstanding orders. So:
 * a computed **coverage** view answers "is each order and run covered, and by what?", and rolls
   runs up to *clear to build*, *clear by date* or *blocked*.
 
-Detail: [specs/operations.md](specs/operations.md) §6 and §13.
+Detail: [domain/operations.md](../design/specs/domain/operations.md) §6 and §13.
 
 ## 5. Drawing borders: modules instead of one big database
 

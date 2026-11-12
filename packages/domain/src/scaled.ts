@@ -1,4 +1,4 @@
-// Exact quantities and money (docs/specs/architecture.md §7). A value is stored as an integer
+// Exact quantities and money (design/specs/domain/architecture.md §7). A value is stored as an integer
 // count of 1 / 10^scale of its unit. Display divides by the scale.
 
 export type Scaled = number;

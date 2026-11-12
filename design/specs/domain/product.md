@@ -160,7 +160,7 @@ An **approved parameter combination** of a family whose class kind is `part` or 
 * Part numbers are not tied to versions: `1234` is `base(params)` in every version (§6).
 * *(In code)* The next part number is the highest so far plus one. When another device takes
   the same number first, the write is refused and the next number is tried. **Open:**
-  numbering while offline ([../STATUS.md](../STATUS.md), open items).
+  numbering while offline ([docs/STATUS.md](../../../docs/STATUS.md), open items).
 
 ### PartVersion (derived)
 For each part and each released family version: the **explosion hash** (the hash of a
@@ -183,7 +183,7 @@ part list for a customer. Other modules reference a part by its ID, so the numbe
 key for finding and quoting it.
 
 * An operation that needs a part number MUST refuse a part whose number is not yet issued
-  and confirmed by the cohort ([../STATUS.md](../STATUS.md), open items: numbering while
+  and confirmed by the cohort ([docs/STATUS.md](../../../docs/STATUS.md), open items: numbering while
   offline).
 * Engineering and production documents SHOULD show the partname, and MAY show the number
   beside it.

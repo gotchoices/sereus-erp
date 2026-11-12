@@ -1,4 +1,4 @@
-// The modules of WyattERP and the strands they live in (docs/specs/architecture.md §2).
+// The modules of WyattERP and the strands they live in (design/specs/domain/architecture.md §2).
 // Each module's strand carries one sApp schema. Bonum's strand carries Bonum's sApp, which
 // WyattERP uses through Bonum's own control library rather than its own.
 

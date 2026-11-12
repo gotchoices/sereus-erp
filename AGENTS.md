@@ -15,8 +15,10 @@ To get up to speed, read in this order:
 2. [docs/STATUS.md](docs/STATUS.md): where things stand, **what to do next** ("Resume here"),
    and the decision log.
 3. [docs/Design.md](docs/Design.md): the reasoning behind the decisions.
-4. [docs/specs/](docs/specs/README.md): the domain contract. architecture.md first; it sets the
-   conventions the others assume.
+4. [design/specs/domain/](design/specs/domain/index.md): the domain contract, shared by every
+   app target. architecture.md first; it sets the conventions the others assume.
+5. [design/](design/AGENTS.md) for app work: the appeus project (`design/specs/project.md`,
+   stories and specs per target), with app code under `apps/<target>/`.
 
 Read [docs/legacy/](docs/legacy/README.md) when an **ATI:** note or a Q number needs context,
 or when working on the BOM engine's corpus migration.
@@ -48,9 +50,9 @@ it in them (usually STATUS.md or the relevant spec), not only in your reply.
 * **Specs are the source of truth** for behavior. When a decision changes, update the spec, the
   decision log in STATUS.md, and Design.md if the reasoning changed.
 * Specs use MUST / SHOULD / MAY. **ATI:** notes are context. **Open:** marks a deliberate gap
-  with its working default. Specs describe data, rules and behavior, never UI; UIs are specified
-  later per appeus target. The specs are written to move into an appeus project as
-  `design/specs/domain/`.
+  with its working default. Domain specs (`design/specs/domain/`) describe data, rules and
+  behavior, never UI. Screens, navigation and UI rules go in the target's own specs
+  (`design/specs/<target>/`), and only there.
 * "Q12" and similar cite the owner's answers in [docs/legacy/Questions.md](docs/legacy/Questions.md).
   New questions for the owner go in a new lettered section at the end of that file, for the owner to
   answer inline. Summarize them in your reply.
@@ -66,3 +68,16 @@ it in them (usually STATUS.md or the relevant spec), not only in your reply.
 The user may edit comments into markdown files for agent consumption using the form:
 <!--EC -->
 When present, follow the enclosed instructions and/or integrate relevant content into the document where appropriate and then remove the comment.
+
+<!-- appeus -->
+## App design (appeus)
+
+This project uses [Appeus](appeus/README.md), a design-first workflow for building apps.
+
+- Design surface: `design/` — stories, specs, consolidations. Start at `design/AGENTS.md`.
+- Generated app code: `apps/<target>/`. Start at `apps/<target>/AGENTS.md`.
+- Phase: while `design/specs/project.md` is incomplete, follow [bootstrap rules](appeus/agent-rules/bootstrap.md); once a target exists, follow [project rules](appeus/agent-rules/project.md).
+- Scripts: `appeus/scripts/` (`add-app.sh`, `check-stale.sh`, `update-dep-hashes.sh`, …). Run them from this directory.
+- Appeus owns only `design/`, `apps/`, `mock/`, and the `appeus` symlink. Leave the rest of the repo alone.
+- Host conventions win: code style, formatting, and toolchain rules stated elsewhere in this file (and `.editorconfig`) override Appeus defaults for generated code.
+- If the project uses a ticket system (e.g. `tickets/`), tracked work items live there. Appeus `design/specs/<target>/STATUS.md` tracks design/generation phase only.

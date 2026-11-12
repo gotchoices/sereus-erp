@@ -1,4 +1,4 @@
-// Partnames and part numbers (docs/specs/product.md §2, §3).
+// Partnames and part numbers (design/specs/domain/product.md §2, §3).
 //
 //   a:chan(2400,4,w)      a configuration, in the current version
 //   a:chan(2400,4,w).3    the configuration as defined by family version 3

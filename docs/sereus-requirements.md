@@ -9,7 +9,7 @@ unless noted.
 WyattERP runs as several strands: catalog, parties, ops, AP and AR, plus a link strand per
 vendor and per shop. It shares the party's cadre with Bonum, whose own strand holds the
 books. Each module reads the others and posts to them
-([specs/architecture.md](specs/architecture.md) §5–§6).
+([domain/architecture.md](../design/specs/domain/architecture.md) §5–§6).
 
 ## 1. What works today
 

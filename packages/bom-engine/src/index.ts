@@ -2,7 +2,7 @@ import type { CatalogView, ExplodeRequest, ExplosionResult, Providers } from './
 
 export type * from './types.js';
 
-/** Explode a family or part into its bill of materials (docs/specs/bom-engine.md §3). */
+/** Explode a family or part into its bill of materials (design/specs/domain/bom-engine.md §3). */
 export function explode(
   _request: ExplodeRequest,
   _catalog: CatalogView,

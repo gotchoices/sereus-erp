@@ -247,7 +247,7 @@ and the full directory index is in [ati-index.md](ati-index.md).
    ATI evidence: pass 2 had only `revision`/`minrev` labels, used by 732 and 232 families. In
    wyselib `prod`, part numbers were keyed to the family alone, with one draft above the
    current version and `prod.minr` minor-revision notes. See
-   [../specs/product.md](../specs/product.md) §3–6.
+   [domain/product.md](../../design/specs/domain/product.md) §3–6.
 2. **Make the BOM evaluator one shared, deterministic library** that every client, report and
    peer can call. It does not need to live inside the database (see [../Design.md](../Design.md) §2). Persist its *results*
    (generated demand, run BOMs) as data, stamped with the product version and engine version.

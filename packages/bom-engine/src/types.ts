@@ -1,4 +1,4 @@
-// Interface of the parametric BOM engine (docs/specs/bom-engine.md §2). The engine is pure: it
+// Interface of the parametric BOM engine (design/specs/domain/bom-engine.md §2). The engine is pure: it
 // reads only the catalog view and providers it is handed, and returns a result.
 
 export type Depth = 'full' | 'to_part' | 'one_level' | 'root_only';
