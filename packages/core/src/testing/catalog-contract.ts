@@ -155,6 +155,31 @@ export function describeCatalogContract(name: string, setup: () => Promise<Catal
       expect(value(await m.versions.revise('a:chan', 2, { summary: 'drop qc', notes: { remove: [now.notes[2]!.id] } }))).toBe(2);
     });
 
+    it('discards a saved draft completely, so the next draft starts clean', async () => {
+      const ver = value(await m.versions.startDraft('a:frame'));
+      const d = value(await m.versions.get('a:frame', ver));
+      value(await m.versions.saveDraft('a:frame', {
+        ...definition(d),
+        parameters: [{ pos: 1, var: 'W', type: 'num', unitCode: 'mm', description: 'Width', defaultValue: null, min: null, max: null, allowed: [] }],
+      }));
+      value(await m.versions.discardDraft('a:frame'));
+      // Starting again copies the current version only: nothing of the discarded draft is left.
+      expect(value(await m.versions.startDraft('a:frame'))).toBe(ver);
+      expect(value(await m.versions.get('a:frame', ver)).parameters).toEqual([]);
+      value(await m.versions.discardDraft('a:frame'));
+    });
+
+    it('deletes a never-released family with its draft', async () => {
+      const fam = value(await m.families.create({ base: 'a:temp', unitCode: 'ea', description: 'Temporary' }, {
+        parameters: [{ pos: 1, var: 'X', type: 'str', unitCode: null, description: 'x', defaultValue: null, min: null, max: null, allowed: [] }],
+      }));
+      value(await m.families.remove(fam.id));
+      // The same name can be used again, and its draft starts empty.
+      const again = value(await m.families.create({ base: 'a:temp', unitCode: 'ea', description: 'Again' }));
+      expect(value(await m.versions.get(again.id)).parameters).toEqual([]);
+      value(await m.families.remove(again.id));
+    });
+
     it('retires an old version but not the current one', async () => {
       failure(await m.versions.retire('a:chan', 2), 'refused', 'RetireCurrent');
       value(await m.versions.retire('a:chan', 1));

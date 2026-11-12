@@ -2,7 +2,7 @@
 
 Requirements from WyattERP for the Sereus stack. The findings were checked against the
 `ser/sereus` code and the published packages in November 2026 (`@serfab/cadre-core` 1.21,
-`@quereus/quereus` 4.25, Optimystic 1.25). Test-backed findings point to
+`@quereus/quereus` 4.25, Optimystic 1.25; since moved to 1.22, 5.4 and 1.27). Test-backed findings point to
 `packages/core/src/multi-strand/`. Paths starting `sereus/` are in `ser/sereus/packages/`
 unless noted.
 
@@ -121,7 +121,21 @@ hold both strands compute it, and other members receive the results. The use cas
 Until then, WyattERP publishes extracts into link strands as an explicit step. The
 multi-strand test does this with one statement over the bridge.
 
-## 5. Tickets touched
+## 5. Foreign-key cascades on a strand (resolved)
+
+Found November 2026 while building the web draft editor: on a strand, `on delete cascade`
+left child rows behind, silently, while the same schema in memory deleted them.
+* **Cause:** Optimystic's Quereus plugin returned `{ status: 'ok' }` without the deleted row
+  from a DELETE. Quereus reads a missing `row` as "nothing deleted" and skips everything it
+  does after a delete: FK actions, change recording, row-time maintenance, auto events
+  (`ser/quereus/docs/module-authoring.md`, `update()` contract).
+* **Fixed upstream** in Optimystic 1.26.0 (commit `a38841e8`, ticket
+  "a delete on an optimystic table skips what the engine does after it"). WyattERP moved to
+  1.26.0 with cadre-core 1.22 and Quereus 5.0 (chat's pins). No new issue was needed.
+* **Regression test:** `packages/core/src/stack/cascade.test.ts` checks the cascade in memory
+  and on a strand.
+
+## 6. Tickets touched
 
 None in `ser/sereus/tickets` covers multi-app nodes, super-apps, or checking a claim against
 the Header. These are related:

@@ -200,6 +200,13 @@ export function createCatalogModel(db: Database, opts: CatalogModelOptions): Cat
 
   // ── Writing a draft's definition ──
 
+  /** Delete everything that hangs off a draft version, children before parents (a whole-draft save). */
+  async function deleteContents(familyId: string, ver: number): Promise<void> {
+    for (const t of ['Note', 'BomLine', 'AllowedValue', 'Parameter', 'Process', 'Document']) {
+      await db.exec(`delete from App.${t} where FamilyId = ? and Ver = ?`, [familyId, ver] as never);
+    }
+  }
+
   async function writeDefinition(w: Writer, familyId: string, ver: number, def: Partial<DraftDefinition>, replace: boolean): Promise<void> {
     const docs = (def.documents ?? []).map((d) => ({ ...d, id: d.id ?? newId() }));
     const docIds = new Set(docs.map((d) => d.id));
@@ -212,11 +219,7 @@ export function createCatalogModel(db: Database, opts: CatalogModelOptions): Cat
       Spec: def.spec ?? null, FamilyScript: def.familyScript ?? null, PriceFormula: def.priceFormula ?? null,
       ExplodeDefault: def.explodeDefault ?? 'none', CompatNotes: def.compatNotes ?? null,
     }, { FamilyId: familyId, Ver: ver });
-    if (replace) {
-      for (const t of ['Note', 'BomLine', 'AllowedValue', 'Parameter', 'Process', 'Document']) {
-        await db.exec(`delete from App.${t} where FamilyId = ? and Ver = ?`, [familyId, ver] as never);
-      }
-    }
+    if (replace) await deleteContents(familyId, ver);
     const key = { FamilyId: familyId, Ver: ver };
     for (const d of docs) await w.insert('Document', { ...key, ...documentRow(d), Id: d.id });
     for (const p of def.parameters ?? []) {
@@ -319,6 +322,7 @@ export function createCatalogModel(db: Database, opts: CatalogModelOptions): Cat
       remove: (id: string) => op(async () => {
         const fam = await family(id);
         if (fam.currentVer !== null) throw refused('FamilyDeleteUnreleased', `${fam.base} has been released; mark it obsolete instead`);
+        // The draft and everything under it go by `on delete cascade` (catalog.qsql).
         await inTxn(() => db.exec('delete from App.Family where Id = ?', [fam.id] as never));
       }),
 
@@ -361,6 +365,10 @@ export function createCatalogModel(db: Database, opts: CatalogModelOptions): Cat
         // New ids for the copied documents; notes follow their documents.
         const docIds = new Map((from?.documents ?? []).map((d) => [d.id, newId()]));
         await inTxn(async () => {
+          // TEMPORARY (STATUS.md, open items: "cascade leftovers"): a catalog written before
+          // Optimystic 1.26 can hold rows under this number that a cascade failed to delete.
+          // They belong to no version; clear them so the copy starts clean.
+          await deleteContents(fam.id, ver);
           await w.insert('Version', { FamilyId: fam.id, Ver: ver });
           if (from) {
             await writeDefinition(w, fam.id, ver, {

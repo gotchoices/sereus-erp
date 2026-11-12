@@ -10,8 +10,8 @@
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "test": "echo \"no web tests yet\"",
-    "dev:memory": "WYATT_DATA=memory vite dev",
-    "start": "node build"
+    "start": "node build",
+    "dev:mock": "WYATT_DATA=memory vite dev"
   },
   "devDependencies": {
     "@sveltejs/adapter-node": "^5.0.0",
@@ -27,9 +27,9 @@
   "dependencies": {
     "@libp2p/circuit-relay-v2": "4.2.14",
     "@libp2p/websockets": "10.1.22",
-    "@optimystic/db-p2p-storage-fs": "1.25.0",
-    "@quereus/quereus": "4.25.0",
-    "@serfab/cadre-core": "1.21.0",
+    "@optimystic/db-p2p-storage-fs": "1.27.0",
+    "@quereus/quereus": "5.4.0",
+    "@serfab/cadre-core": "1.22.0",
     "@wyatt/core": "workspace:^",
     "@wyatt/domain": "workspace:^"
   }

@@ -7,10 +7,10 @@ Screens of the **web** target, with routes and status. Draft for the owner's rev
 
 | Screen Name | Route | Spec File | Stories | Variants | Status |
 |-------------|-------|-----------|---------|----------|--------|
-| Families | FamilyList | family-list.md | product-01 | happy, empty, error | generated (first slice), awaiting review |
-| Family | FamilyDetail | family-detail.md | product-01, 03, 04 | happy, error | planned |
-| Draft editor | DraftEditor | draft-editor.md | product-02, 03 | happy, error | planned |
-| Version | VersionView | version-view.md | product-03 | happy | planned |
+| Families | FamilyList | family-list.md | product-01 | happy, empty, error | generated (slice 1), reviewed: rough cut accepted |
+| Family | FamilyDetail | family-detail.md | product-01, 03, 04 | happy, error | generated (slice 2) |
+| Draft editor | DraftEditor | draft-editor.md | product-02, 03 | happy, error | generated (slices 2, 3: release dialog) |
+| Version | VersionView | version-view.md | product-03 | happy | generated (slice 3) |
 | Parts | PartList | part-list.md | product-04 | happy, empty | planned |
 | Part | PartDetail | part-detail.md | product-04 | happy | planned |
 | Units, classes and operations | ReferenceData | reference-data.md | product-01 (context) | happy, empty | planned |

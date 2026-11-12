@@ -17,6 +17,8 @@
 --     transaction. The immutability rules below use it: "the version was already released
 --     when this transaction began".
 --   * Foreign keys are enforced, checked at commit on the child side, RESTRICT by default.
+--   * `on delete cascade` needs Optimystic 1.26 or later on a strand; before that it left the
+--     children behind (docs/sereus-requirements.md §5, regression test packages/core/src/stack/).
 --   * `json` columns hold arrays, compared structurally (so a unique key over a json column
 --     is a unique key over its value, not its spelling).
 --

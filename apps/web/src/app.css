@@ -33,3 +33,32 @@ button, input, select, textarea { font: inherit; }
 button { cursor: pointer; }
 .error { color: var(--danger); }
 .muted { color: var(--text-2); }
+a.button, button.primary, a.button.primary {
+	display: inline-block;
+	padding: 0.2rem 0.7rem;
+	border: 1px solid var(--border);
+	border-radius: 4px;
+	text-decoration: none;
+	color: var(--text);
+	background: transparent;
+}
+button.primary, a.button.primary {
+	background: var(--accent);
+	border-color: var(--accent);
+	color: var(--bg);
+}
+/* Editing tables (DraftEditor). */
+table.edit td { padding: 0.2rem 0.3rem; }
+table.edit input, table.edit select, table.edit textarea { width: 100%; box-sizing: border-box; }
+table.edit tr.sub td { border-bottom: 1px dashed var(--border); }
+td.order { color: var(--text-2); width: 2rem; text-align: right; }
+td.row-tools { white-space: nowrap; width: 1%; }
+td.row-tools button { padding: 0 0.35rem; }
+input.short { max-width: 6rem; }
+input.tiny { max-width: 3.5rem; }
+input.mid { max-width: 12rem; }
+input.wide { min-width: 24rem; }
+.small { font-size: 0.8rem; }
+.chip { display: inline-flex; gap: 0.2rem; margin: 0 0.5rem 0.25rem 0; }
+label.param { display: inline-flex; flex-direction: column; margin-right: 0.3rem; }
+input, select, textarea { background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 3px; padding: 0.15rem 0.3rem; }

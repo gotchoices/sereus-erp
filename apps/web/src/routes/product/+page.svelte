@@ -3,6 +3,7 @@
 	import type { ActionData, PageData } from './$types';
 	import type { Family } from '@wyatt/core/catalog';
 	import NewFamily from '$lib/components/NewFamily.svelte';
+	import { familyHref } from '$lib/links';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -15,6 +16,15 @@
 	const action = $derived(`?/create${keep ? `&${keep}` : ''}`);
 	const className = (prefix: string) => data.classes.find((c) => c.prefix === prefix)?.name ?? prefix;
 	const filtered = $derived(data.filter.text !== '' || data.filter.classPrefix !== '' || data.filter.status !== 'active');
+
+	// Filters apply as they change: selects at once, the search box after a pause.
+	let filters: HTMLFormElement | undefined = $state();
+	let timer: ReturnType<typeof setTimeout> | undefined;
+	const apply = () => filters?.requestSubmit();
+	const applySoon = () => {
+		clearTimeout(timer);
+		timer = setTimeout(apply, 250);
+	};
 
 	function versionState(f: Family): string {
 		if (f.currentVer === null) return f.draftVer === null ? 'no versions' : `draft v${f.draftVer}, never released`;
@@ -32,21 +42,21 @@
 {#if data.error}
 	<p class="error" role="alert">{data.error}</p>
 {:else}
-	<form method="GET" class="filters">
+	<form method="GET" class="filters" bind:this={filters} data-sveltekit-keepfocus data-sveltekit-replacestate>
 		{#if data.status.variant}<input type="hidden" name="variant" value={data.status.variant} />{/if}
-		<input type="search" name="q" value={data.filter.text} placeholder="Search name or description" aria-label="Search" />
-		<select name="class" aria-label="Class">
+		<input type="search" name="q" value={data.filter.text} placeholder="Search name or description" aria-label="Search" oninput={applySoon} />
+		<select name="class" aria-label="Class" onchange={apply}>
 			<option value="">All classes</option>
 			{#each data.classes as c (c.prefix)}
 				<option value={c.prefix} selected={c.prefix === data.filter.classPrefix}>{c.prefix}: {c.name}</option>
 			{/each}
 		</select>
-		<select name="status" aria-label="Status">
+		<select name="status" aria-label="Status" onchange={apply}>
 			{#each [['active', 'Active'], ['restricted', 'Restricted'], ['obsolete', 'Obsolete'], ['all', 'Any status']] as [v, label] (v)}
 				<option value={v} selected={v === data.filter.status}>{label}</option>
 			{/each}
 		</select>
-		<button type="submit">Filter</button>
+		<noscript><button type="submit">Filter</button></noscript>
 	</form>
 
 	{#if data.total === 0}
@@ -68,7 +78,7 @@
 			<tbody>
 				{#each data.families as f (f.id)}
 					<tr class:created={f.base === data.created}>
-						<td class="mono">{f.base}</td>
+						<td class="mono"><a href={familyHref(f.base, keep)}>{f.base}</a></td>
 						<td>{f.description}</td>
 						<td>{className(f.classPrefix)}</td>
 						<td class="mono">{f.unitCode}</td>

@@ -17,7 +17,7 @@
         "design/stories/web/product-01-start-a-family.md": "921c1e70d071710896aba1e9c2304532f78e3c85be5940bd4db809396d4e11da",
         "design/specs/project.md": "4ab6f93d58ee1c47ebfdd4bc151da261a7bfdc698bae69df3fb009bec951dab1",
         "design/specs/web/navigation.md": "54cf41f914d6bf7f624089e9a1654fb826f97d0964334f31d2c45a6a9ae43d27",
-        "design/specs/web/screens/index.md": "c16b1f77fc44a608519818db89f1b8ba9e2c96f9c363c4e9fec3f0b34b2c1152",
+        "design/specs/web/screens/index.md": "be59db60364004898192dcf7751856d96e975e6b5837d0ac46c5f76e20358de2",
         "design/specs/web/global/ui.md": "7ff180ce8faee9d4b7610315d11f8c1d4163e7cf2df86ec3e882a81e1cd3d058",
         "design/specs/domain/product.md": "56c414669209791549a7f4fb6c6c196345c0212ac22df2fb0dd7d18511ed6377",
         "design/specs/domain/architecture.md": "4bc43cf55ec5f397748d61e417f8226941ea9b93044a248f806b116d98abfeda"
@@ -27,62 +27,72 @@
     {
       "route": "FamilyDetail",
       "dependsOn": [
-        "design/specs/project.md",
-        "design/specs/domain/product.md",
-        "design/specs/domain/architecture.md",
-        "design/specs/domain/operations.md",
-        "design/specs/domain/purchasing.md",
-        "design/specs/domain/index.md",
-        "design/specs/domain/bom-engine.md",
-        "design/specs/web/navigation.md",
-        "design/specs/web/screens/index.md",
-        "design/stories/web/product-02-define-the-family.md",
-        "design/stories/web/product-04-approve-configurations.md",
+        "design/generated/web/screens/FamilyDetail.md",
         "design/stories/web/product-01-start-a-family.md",
         "design/stories/web/product-03-release-the-first-version.md",
-        "design/generated/web/screens/FamilyDetail.md"
+        "design/stories/web/product-04-approve-configurations.md",
+        "design/specs/project.md",
+        "design/specs/web/navigation.md",
+        "design/specs/web/screens/index.md",
+        "design/specs/domain/product.md"
       ],
-      "depHashes": {}
+      "depHashes": {
+        "design/generated/web/screens/FamilyDetail.md": "853d7db19ecf1ce2a7e6486946ed55f8cbd6d18f34e8aa74aee85cb8ed3ca2a2",
+        "design/stories/web/product-01-start-a-family.md": "921c1e70d071710896aba1e9c2304532f78e3c85be5940bd4db809396d4e11da",
+        "design/stories/web/product-03-release-the-first-version.md": "9e30b2521a70c3fa44975b8be8dfecaf41e9e921db892ccaae894a42d772f639",
+        "design/stories/web/product-04-approve-configurations.md": "dbd57718fec0820027ae26073f1a65a547486b952dc3ba40c762e837c4477cdc",
+        "design/specs/project.md": "4ab6f93d58ee1c47ebfdd4bc151da261a7bfdc698bae69df3fb009bec951dab1",
+        "design/specs/web/navigation.md": "54cf41f914d6bf7f624089e9a1654fb826f97d0964334f31d2c45a6a9ae43d27",
+        "design/specs/web/screens/index.md": "be59db60364004898192dcf7751856d96e975e6b5837d0ac46c5f76e20358de2",
+        "design/specs/domain/product.md": "56c414669209791549a7f4fb6c6c196345c0212ac22df2fb0dd7d18511ed6377"
+      },
+      "output": "apps/web/src/routes/product/families/[base]/+page.svelte"
     },
     {
       "route": "DraftEditor",
       "dependsOn": [
+        "design/generated/web/screens/DraftEditor.md",
+        "design/stories/web/product-02-define-the-family.md",
         "design/specs/project.md",
-        "design/specs/domain/product.md",
-        "design/specs/domain/architecture.md",
-        "design/specs/domain/operations.md",
-        "design/specs/domain/purchasing.md",
-        "design/specs/domain/index.md",
-        "design/specs/domain/bom-engine.md",
         "design/specs/web/navigation.md",
         "design/specs/web/screens/index.md",
-        "design/stories/web/product-02-define-the-family.md",
-        "design/stories/web/product-04-approve-configurations.md",
-        "design/stories/web/product-01-start-a-family.md",
-        "design/stories/web/product-03-release-the-first-version.md",
-        "design/generated/web/screens/DraftEditor.md"
+        "design/specs/domain/product.md",
+        "design/specs/domain/catalog.qsql",
+        "design/generated/web/screens/VersionView.md"
       ],
-      "depHashes": {}
+      "depHashes": {
+        "design/generated/web/screens/DraftEditor.md": "8406d14b5aec289fb7a6f31bc5894fdeca616e2e3836809a9f74710498849042",
+        "design/stories/web/product-02-define-the-family.md": "a69fc246c2f62dee9ab14cdb763b88c81ae969ad30c6534e90c9113408b3395a",
+        "design/specs/project.md": "4ab6f93d58ee1c47ebfdd4bc151da261a7bfdc698bae69df3fb009bec951dab1",
+        "design/specs/web/navigation.md": "54cf41f914d6bf7f624089e9a1654fb826f97d0964334f31d2c45a6a9ae43d27",
+        "design/specs/web/screens/index.md": "be59db60364004898192dcf7751856d96e975e6b5837d0ac46c5f76e20358de2",
+        "design/specs/domain/product.md": "56c414669209791549a7f4fb6c6c196345c0212ac22df2fb0dd7d18511ed6377",
+        "design/specs/domain/catalog.qsql": "01af511e4851e6f4fe675807dc16cfb5f7bef32f55190ecc3fae9ba237dc0e59",
+        "design/generated/web/screens/VersionView.md": "7c96890e8a6694d435d9e2e396b1b26c7fd4a8bc94b2d808a2fe787ddbfce72b"
+      },
+      "output": "apps/web/src/routes/product/families/[base]/draft/+page.svelte"
     },
     {
       "route": "VersionView",
       "dependsOn": [
+        "design/generated/web/screens/VersionView.md",
+        "design/stories/web/product-03-release-the-first-version.md",
+        "design/stories/web/product-02-define-the-family.md",
         "design/specs/project.md",
-        "design/specs/domain/product.md",
-        "design/specs/domain/architecture.md",
-        "design/specs/domain/operations.md",
-        "design/specs/domain/purchasing.md",
-        "design/specs/domain/index.md",
-        "design/specs/domain/bom-engine.md",
         "design/specs/web/navigation.md",
         "design/specs/web/screens/index.md",
-        "design/stories/web/product-02-define-the-family.md",
-        "design/stories/web/product-04-approve-configurations.md",
-        "design/stories/web/product-01-start-a-family.md",
-        "design/stories/web/product-03-release-the-first-version.md",
-        "design/generated/web/screens/VersionView.md"
+        "design/specs/domain/product.md"
       ],
-      "depHashes": {}
+      "depHashes": {
+        "design/generated/web/screens/VersionView.md": "7c96890e8a6694d435d9e2e396b1b26c7fd4a8bc94b2d808a2fe787ddbfce72b",
+        "design/stories/web/product-03-release-the-first-version.md": "9e30b2521a70c3fa44975b8be8dfecaf41e9e921db892ccaae894a42d772f639",
+        "design/stories/web/product-02-define-the-family.md": "a69fc246c2f62dee9ab14cdb763b88c81ae969ad30c6534e90c9113408b3395a",
+        "design/specs/project.md": "4ab6f93d58ee1c47ebfdd4bc151da261a7bfdc698bae69df3fb009bec951dab1",
+        "design/specs/web/navigation.md": "54cf41f914d6bf7f624089e9a1654fb826f97d0964334f31d2c45a6a9ae43d27",
+        "design/specs/web/screens/index.md": "be59db60364004898192dcf7751856d96e975e6b5837d0ac46c5f76e20358de2",
+        "design/specs/domain/product.md": "56c414669209791549a7f4fb6c6c196345c0212ac22df2fb0dd7d18511ed6377"
+      },
+      "output": "apps/web/src/routes/product/families/[base]/v/[ver]/+page.svelte"
     },
     {
       "route": "PartList",

@@ -72,7 +72,7 @@ moved into Quereus constraints. It is the template for how a pass-2 ATI schema w
 
 ## Quereus as used here
 
-Checked against `@quereus/quereus` 4.25 while writing [domain/catalog.qsql](../design/specs/domain/catalog.qsql).
+Checked against `@quereus/quereus` 4.25 while writing (the suite passes unchanged on 5.0 and 5.4, November 2026) [domain/catalog.qsql](../design/specs/domain/catalog.qsql).
 Note that the local `ser/quereus` checkout can be older than the published package. Quereus is
 not SQLite:
 
