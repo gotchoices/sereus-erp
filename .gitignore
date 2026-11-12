@@ -32,3 +32,6 @@ __pycache__/
 !.yarn/sdks
 !.yarn/versions
 package-lock.json
+
+# Generated from docs/specs/*.qsql at build time
+packages/core/src/generated/

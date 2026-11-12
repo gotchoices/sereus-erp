@@ -17,9 +17,10 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "codegen": "node scripts/gen-schema.mjs",
+    "build": "node scripts/gen-schema.mjs && tsc -p tsconfig.build.json",
+    "typecheck": "node scripts/gen-schema.mjs && tsc -p tsconfig.json --noEmit",
+    "test": "node scripts/gen-schema.mjs && vitest run"
   },
   "dependencies": {
     "@wyatt/bom-engine": "workspace:^",

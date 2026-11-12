@@ -73,8 +73,21 @@ the 2014 ATI BOM corpus:
 The extract is local-only and git-ignored. If it is missing, re-create it with the recipe in
 [legacy/data-2014.md](legacy/data-2014.md).
 
-After these two, the build order is:
-1. catalog module;
+**C. Product manager** (the prodim successor). Build this now: it lives in one strand, and
+needs no cross-strand joins, postings or Bonum.
+1. ✅ Catalog schema [specs/catalog.qsql](specs/catalog.qsql). It is generated into
+   `@wyatt/core` (`CATALOG_SCHEMA`, `catalogSAppConfig()`). `packages/core/src/catalog/`
+   tests each rule in memory, and the main ones on a real strand.
+2. ⬜ Catalog model in `@wyatt/core`: create, copy and edit a draft; release (with the
+   validation explosions from B); minor revisions; parts and standard packages. One
+   interface with a mock and a Sereus implementation, held to one contract test suite (the
+   chat pattern).
+3. ⬜ Hydroponics product line as the first real data set (small). The ATI 2014 corpus is
+   loaded only as a volume test and a test of BOM scripting, never as working data.
+4. ⬜ Appeus setup and the product-manager UI.
+
+After these, the build order is:
+1. catalog module (C above);
 2. operations core: locations, moves, balances, coverage, orders;
 3. purchasing and runs;
 4. Bonum posting;
@@ -95,7 +108,8 @@ After these two, the build order is:
 | Repository scaffold (yarn workspace: domain, bom-engine, core, cli) | ✅ |
 | Multi-strand test (packages/core/src/multi-strand) | ✅ steps 1–5 |
 | BOM engine prototype against the 2014 corpus | ⬜ next |
-| Executable Quereus schemas (`schema.qsql` per module) | ⬜ |
+| Catalog schema ([specs/catalog.qsql](specs/catalog.qsql)), tested in memory and on a strand | ✅ |
+| Executable schemas of the other modules | ⬜ |
 | Appeus project setup (stories, UI specs per target) | ⬜ |
 
 ## Decision log
@@ -130,6 +144,11 @@ The reasoning is in [Design.md](Design.md).
 | Packages: `@wyatt/core` holds the control logic, and computational modules get specific names (`@wyatt/bom-engine`), never a general "engine" | owner, November 2026 |
 
 ## Open items
+
+* ❓ **Roles and signed writes in the schemas.** catalog.qsql records the writer (`Actor`)
+  through mutation context, but the value is asserted by the writer, not verified. Role
+  checks (product.md §9) need signed writes against the strand's member keys, as Taleus does
+  with `verify(digest(…))`. To be designed once for all modules.
 
 * ✅ **Quereus multi-strand mechanism.** Sereus gives each strand its own `Database`, with
   its tables in schema `App`, and Quereus has no `ATTACH`. Cross-strand reads are therefore

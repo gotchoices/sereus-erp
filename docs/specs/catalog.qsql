@@ -1,0 +1,503 @@
+-- WyattERP catalog strand: the sApp schema body (Quereus declarative SQL).
+--
+-- Executable form of product.md. Sereus wraps this body as `declare schema App { … }`, so
+-- outside this file the tables are `App.Family` and so on. Bare items only (`table`, `index`,
+-- `view`, `assertion`); Sereus refuses `create …` and `seed`. Tests apply it to an in-memory
+-- Quereus database and to a real strand: packages/core/src/catalog/.
+--
+-- Quereus differs from SQLite in ways this file depends on:
+--   * Columns are NOT NULL unless declared `null`.
+--   * A CHECK that is NULL passes, as in SQL. Every check that reads `context.*` (absent when a
+--     write supplies no context) or a nullable column is written so that it is false, not NULL,
+--     when it should fail: `coalesce(…, false)`, or the both-null idiom below.
+--   * There is no `regexp`, `glob` or `a is b`. Formats are checked with `trim(x, allowed)`,
+--     which is '' exactly when every character of x is in `allowed`. Null-safe equality is
+--     `coalesce(a = b, a is null and b is null)`.
+--   * A CHECK with a subquery is deferred to commit. `committed.T` reads T as it was before the
+--     transaction. The immutability rules below use it: "the version was already released
+--     when this transaction began".
+--   * Foreign keys are enforced, checked at commit on the child side, RESTRICT by default.
+--   * `json` columns hold arrays, compared structurally (so a unique key over a json column
+--     is a unique key over its value, not its spelling).
+--
+-- Audit (architecture.md §9). Every table has CreatedAt/CreatedBy/UpdatedAt/UpdatedBy, filled
+-- from the mutation context: each write supplies `with context Actor = ?, Now = ?`. Actor is
+-- the writer's strand member key and Now an ISO-8601 time. Both are asserted by the writer and
+-- not verified. Signed writes and role checks (product.md §9) are not enforced here yet
+-- (STATUS.md, open items).
+--
+-- Not enforced here, because they need the BOM engine: release validation explosions, child
+-- parameter counts (product.md §8), canonical parameter values (product.md §2) and cycles.
+
+-- ── Reference data ─────────────────────────────────────────────────────────────
+
+table Unit (
+  Code text primary key,                  -- 'ea', 'm', 'mm', 'kg'
+  Name text,
+  Dimension text,
+  Scale integer default 0,                -- decimal places stored (architecture.md §7)
+  FactorNum integer null,                 -- exact factor to the dimension's base unit,
+  FactorDen integer null,                 --   as a fraction FactorNum / FactorDen
+  CreatedAt text default Now, CreatedBy text default Actor,
+  UpdatedAt text default Now, UpdatedBy text default Actor,
+  constraint UnitCodeFormat check (length(Code) between 1 and 12
+    and trim(Code, 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_') = ''),
+  constraint UnitDimension check (Dimension in ('count', 'length', 'area', 'volume', 'mass', 'time')),
+  constraint UnitScale check (Scale between 0 and 9),
+  constraint UnitFactor check ((FactorNum is null and FactorDen is null)
+    or coalesce(FactorNum > 0 and FactorDen > 0, false)),
+  constraint UnitAuditInsert check on insert (coalesce(CreatedBy = context.Actor and CreatedAt = context.Now
+    and UpdatedBy = CreatedBy and UpdatedAt = CreatedAt, false)),
+  constraint UnitAuditUpdate check on update (coalesce(new.UpdatedBy = context.Actor and new.UpdatedAt = context.Now
+    and new.CreatedBy = old.CreatedBy and new.CreatedAt = old.CreatedAt, false)),
+  constraint UnitCodeFixed check on update (new.Code = old.Code)
+) with context (Actor text null, Now text null);
+
+table Class (
+  Prefix text primary key,                -- one character: 'a', 'b', '@', 'K'
+  Name text,
+  Kind text,
+  StorageNotes text null,
+  DefaultLocationType text null,          -- an operations location type (operations.md)
+  CreatedAt text default Now, CreatedBy text default Actor,
+  UpdatedAt text default Now, UpdatedBy text default Actor,
+  constraint ClassPrefixFormat check (length(Prefix) = 1
+    and trim(Prefix, 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@') = ''),
+  constraint ClassKind check (Kind in ('part', 'package', 'custom')),
+  constraint ClassAuditInsert check on insert (coalesce(CreatedBy = context.Actor and CreatedAt = context.Now
+    and UpdatedBy = CreatedBy and UpdatedAt = CreatedAt, false)),
+  constraint ClassAuditUpdate check on update (coalesce(new.UpdatedBy = context.Actor and new.UpdatedAt = context.Now
+    and new.CreatedBy = old.CreatedBy and new.CreatedAt = old.CreatedAt, false)),
+  constraint ClassPrefixFixed check on update (new.Prefix = old.Prefix)
+) with context (Actor text null, Now text null);
+
+table Operation (
+  Code text primary key,                  -- 'cut', 'weld', 'assy', 'test'
+  Description text,
+  CreatedAt text default Now, CreatedBy text default Actor,
+  UpdatedAt text default Now, UpdatedBy text default Actor,
+  constraint OperationCodeFormat check (length(Code) between 1 and 16
+    and trim(Code, 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_') = ''),
+  constraint OperationAuditInsert check on insert (coalesce(CreatedBy = context.Actor and CreatedAt = context.Now
+    and UpdatedBy = CreatedBy and UpdatedAt = CreatedAt, false)),
+  constraint OperationAuditUpdate check on update (coalesce(new.UpdatedBy = context.Actor and new.UpdatedAt = context.Now
+    and new.CreatedBy = old.CreatedBy and new.CreatedAt = old.CreatedAt, false)),
+  constraint OperationCodeFixed check on update (new.Code = old.Code)
+) with context (Actor text null, Now text null);
+
+-- ── Families and versions ──────────────────────────────────────────────────────
+
+table Family (
+  Id text primary key,                    -- ULID (architecture.md §4)
+  Base text unique,                       -- 'a:chan'; permanent once a version is released
+  ClassPrefix text generated always as (substr(Base, 1, 1)) stored,
+  UnitCode text,                          -- the unit its quantities are counted in
+  Description text,
+  Status text default 'active',
+  CurrentVer integer null,                -- the released version used when none is given
+  VersionStrict boolean default false,    -- '.0' stock may not fill demand (product.md §6)
+  CreatedAt text default Now, CreatedBy text default Actor,
+  UpdatedAt text default Now, UpdatedBy text default Actor,
+  constraint FamilyClass foreign key (ClassPrefix) references Class(Prefix),
+  constraint FamilyUnit foreign key (UnitCode) references Unit(Code),
+  constraint FamilyCurrent foreign key (Id, CurrentVer) references Version(FamilyId, Ver),
+  constraint FamilyBaseFormat check (length(Base) between 3 and 64 and substr(Base, 2, 1) = ':'
+    and trim(substr(Base, 3), 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_') = ''),
+  constraint FamilyStatus check (Status in ('active', 'restricted', 'obsolete')),
+  constraint FamilyBaseFixed check on update (new.Base = old.Base or old.CurrentVer is null),
+  constraint FamilyIdFixed check on update (new.Id = old.Id),
+  constraint FamilyDeleteUnreleased check on delete (CurrentVer is null),
+  constraint FamilyAuditInsert check on insert (coalesce(CreatedBy = context.Actor and CreatedAt = context.Now
+    and UpdatedBy = CreatedBy and UpdatedAt = CreatedAt, false)),
+  constraint FamilyAuditUpdate check on update (coalesce(new.UpdatedBy = context.Actor and new.UpdatedAt = context.Now
+    and new.CreatedBy = old.CreatedBy and new.CreatedAt = old.CreatedAt, false))
+) with context (Actor text null, Now text null);
+
+table Version (
+  FamilyId text,
+  Ver integer,
+  State text default 'draft',
+  ReleasedAt text null,
+  ReleasedBy text null,
+  Interchangeable boolean null,           -- with the previous version (product.md §6)
+  ChangeSummary text null,
+  CompatNotes text null,
+  Spec text null,                         -- markdown
+  FamilyScript text null,                 -- bom-engine.md §4
+  PriceFormula text null,                 -- bom-engine.md §9
+  ExplodeDefault text default 'none',
+  CreatedAt text default Now, CreatedBy text default Actor,
+  UpdatedAt text default Now, UpdatedBy text default Actor,
+  primary key (FamilyId, Ver),
+  constraint VersionFamily foreign key (FamilyId) references Family(Id) on delete cascade,
+  constraint VersionNumber check (Ver >= 1),
+  constraint VersionState check (State in ('draft', 'released', 'superseded', 'retired')),
+  constraint VersionExplodeDefault check (ExplodeDefault in ('none', 'to_part', 'one_level', 'full')),
+  constraint VersionReleaseFields check (State = 'draft' or (ReleasedAt is not null and ReleasedBy is not null
+    and Interchangeable is not null and ChangeSummary is not null)),
+  constraint VersionTransition check on update (new.State = old.State
+    or (old.State = 'draft' and new.State = 'released')
+    or (old.State = 'released' and new.State in ('superseded', 'retired'))
+    or (old.State = 'superseded' and new.State = 'retired')),
+  constraint VersionFrozen check on update (old.State = 'draft' or (
+    new.FamilyId = old.FamilyId and new.Ver = old.Ver
+    and new.ReleasedAt = old.ReleasedAt and new.ReleasedBy = old.ReleasedBy
+    and new.Interchangeable = old.Interchangeable and new.ChangeSummary = old.ChangeSummary
+    and coalesce(new.CompatNotes = old.CompatNotes, new.CompatNotes is null and old.CompatNotes is null)
+    and coalesce(new.Spec = old.Spec, new.Spec is null and old.Spec is null)
+    and coalesce(new.FamilyScript = old.FamilyScript, new.FamilyScript is null and old.FamilyScript is null)
+    and coalesce(new.PriceFormula = old.PriceFormula, new.PriceFormula is null and old.PriceFormula is null)
+    and new.ExplodeDefault = old.ExplodeDefault)),
+  constraint VersionDeleteDraft check on delete (State = 'draft'),
+  constraint VersionAuditInsert check on insert (coalesce(CreatedBy = context.Actor and CreatedAt = context.Now
+    and UpdatedBy = CreatedBy and UpdatedAt = CreatedAt, false)),
+  constraint VersionAuditUpdate check on update (coalesce(new.UpdatedBy = context.Actor and new.UpdatedAt = context.Now
+    and new.CreatedBy = old.CreatedBy and new.CreatedAt = old.CreatedAt, false))
+) with context (Actor text null, Now text null);
+
+-- At most one draft and one released (current) version per family.
+unique index VersionOneDraft on Version(FamilyId) where State = 'draft';
+unique index VersionOneReleased on Version(FamilyId) where State = 'released';
+
+-- Family.CurrentVer names the released version, or is null when none is released.
+assertion FamilyCurrentIsReleased check (not exists (
+  select 1 from Family f
+  where (f.CurrentVer is null and exists (select 1 from Version v where v.FamilyId = f.Id and v.State = 'released'))
+     or (f.CurrentVer is not null and not exists (
+           select 1 from Version v where v.FamilyId = f.Id and v.Ver = f.CurrentVer and v.State = 'released'))));
+
+-- The draft, if any, is numbered CurrentVer + 1 (1 when nothing is released).
+assertion DraftFollowsCurrent check (not exists (
+  select 1 from Version v join Family f on f.Id = v.FamilyId
+  where v.State = 'draft' and v.Ver <> coalesce(f.CurrentVer, 0) + 1));
+
+-- Minor revisions of a released version (product.md §5). Minor 0 is the release itself and
+-- has no row. Insert-only, one per transaction, numbered from 1.
+table MinorRevision (
+  FamilyId text,
+  Ver integer,
+  Minor integer,
+  Summary text,
+  CreatedAt text default Now, CreatedBy text default Actor,
+  UpdatedAt text default Now, UpdatedBy text default Actor,
+  primary key (FamilyId, Ver, Minor),
+  constraint MinorVersion foreign key (FamilyId, Ver) references Version(FamilyId, Ver),
+  constraint MinorNext check on insert (Minor = coalesce((select max(m.Minor) from committed.MinorRevision m
+    where m.FamilyId = new.FamilyId and m.Ver = new.Ver), 0) + 1),
+  constraint MinorOfReleased check on insert (exists (select 1 from committed.Version v
+    where v.FamilyId = new.FamilyId and v.Ver = new.Ver and v.State <> 'draft')),
+  constraint MinorInsertOnly check on update, delete (false),
+  constraint MinorAuditInsert check on insert (coalesce(CreatedBy = context.Actor and CreatedAt = context.Now
+    and UpdatedBy = CreatedBy and UpdatedAt = CreatedAt, false))
+) with context (Actor text null, Now text null);
+
+-- ── Definition of a version (frozen at release) ────────────────────────────────
+-- Each of these tables may be written only while its version is a draft, judged by the state
+-- the version had when the transaction began (committed.Version). So a draft can be created
+-- with its contents, or edited and released, in one transaction, but a released version's
+-- definition cannot change.
+
+table Parameter (
+  FamilyId text,
+  Ver integer,
+  Pos integer,                            -- position in the partname, from 1
+  Var text,                               -- 'W', 'H'; bound as a variable in scripts
+  Type text,
+  UnitCode text null,                     -- required for 'num'
+  Description text,
+  DefaultValue text null,                 -- canonical form (product.md §2)
+  MinValue real null,
+  MaxValue real null,
+  CreatedAt text default Now, CreatedBy text default Actor,
+  UpdatedAt text default Now, UpdatedBy text default Actor,
+  primary key (FamilyId, Ver, Pos),
+  constraint ParameterVarUnique unique (FamilyId, Ver, Var),
+  constraint ParameterVersion foreign key (FamilyId, Ver) references Version(FamilyId, Ver) on delete cascade,
+  constraint ParameterUnit foreign key (UnitCode) references Unit(Code),
+  constraint ParameterPos check (Pos >= 1),
+  constraint ParameterVarFormat check (length(Var) between 1 and 32
+    and trim(Var, 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_') = ''
+    and trim(substr(Var, 1, 1), '0123456789') <> ''
+    -- the host API's names (bom-engine.md §6)
+    and Var not in ('skip', 'error', 'warn', 'band', 'table', 'ceil', 'floor', 'round', 'clamp', 'conv', 'part', 'self')),
+  constraint ParameterType check (Type in ('num', 'str', 'enum')),
+  constraint ParameterNumUnit check (Type <> 'num' or UnitCode is not null),
+  constraint ParameterRange check ((Type = 'num' or (MinValue is null and MaxValue is null))
+    and coalesce(MinValue <= MaxValue, true)),
+  constraint ParameterDraft check on insert, update (not exists (select 1 from committed.Version v
+    where v.FamilyId = new.FamilyId and v.Ver = new.Ver and v.State <> 'draft')),
+  constraint ParameterDraftDelete check on delete (not exists (select 1 from committed.Version v
+    where v.FamilyId = old.FamilyId and v.Ver = old.Ver and v.State <> 'draft')),
+  constraint ParameterAuditInsert check on insert (coalesce(CreatedBy = context.Actor and CreatedAt = context.Now
+    and UpdatedBy = CreatedBy and UpdatedAt = CreatedAt, false)),
+  constraint ParameterAuditUpdate check on update (coalesce(new.UpdatedBy = context.Actor and new.UpdatedAt = context.Now
+    and new.CreatedBy = old.CreatedBy and new.CreatedAt = old.CreatedAt, false))
+) with context (Actor text null, Now text null);
+
+table AllowedValue (
+  FamilyId text,
+  Ver integer,
+  ParamPos integer,
+  Value text,
+  Description text,
+  CreatedAt text default Now, CreatedBy text default Actor,
+  UpdatedAt text default Now, UpdatedBy text default Actor,
+  primary key (FamilyId, Ver, ParamPos, Value),
+  constraint AllowedValueParameter foreign key (FamilyId, Ver, ParamPos)
+    references Parameter(FamilyId, Ver, Pos) on delete cascade,
+  constraint AllowedValueOfEnum check on insert, update (exists (select 1 from Parameter p
+    where p.FamilyId = new.FamilyId and p.Ver = new.Ver and p.Pos = new.ParamPos and p.Type = 'enum')),
+  constraint AllowedValueDraft check on insert, update (not exists (select 1 from committed.Version v
+    where v.FamilyId = new.FamilyId and v.Ver = new.Ver and v.State <> 'draft')),
+  constraint AllowedValueDraftDelete check on delete (not exists (select 1 from committed.Version v
+    where v.FamilyId = old.FamilyId and v.Ver = old.Ver and v.State <> 'draft')),
+  constraint AllowedValueAuditInsert check on insert (coalesce(CreatedBy = context.Actor and CreatedAt = context.Now
+    and UpdatedBy = CreatedBy and UpdatedAt = CreatedAt, false)),
+  constraint AllowedValueAuditUpdate check on update (coalesce(new.UpdatedBy = context.Actor and new.UpdatedAt = context.Now
+    and new.CreatedBy = old.CreatedBy and new.CreatedAt = old.CreatedAt, false))
+) with context (Actor text null, Now text null);
+
+table BomLine (
+  FamilyId text,
+  Ver integer,
+  Pos integer,                            -- evaluation order
+  Component text,                         -- the child family's base
+  ChildParams json default '[]',          -- one expression (text) per child parameter
+  Qty text default '1',                   -- expression: quantity per one parent unit
+  WhenExpr text null,                     -- guard expression (product.md §7)
+  Script text null,
+  ProcessIdx integer null,                -- the routing step that consumes it
+  ChildVer integer null,                  -- pin to a child version; null = current
+  Comment text null,
+  CreatedAt text default Now, CreatedBy text default Actor,
+  UpdatedAt text default Now, UpdatedBy text default Actor,
+  primary key (FamilyId, Ver, Pos),
+  constraint BomLineVersion foreign key (FamilyId, Ver) references Version(FamilyId, Ver) on delete cascade,
+  constraint BomLineComponent foreign key (Component) references Family(Base),
+  -- A check, not a foreign key: discarding a draft cascades to lines and processes in no set
+  -- order, and a RESTRICT key from lines to processes could refuse it. Process guards its side.
+  constraint BomLineProcess check on insert, update (ProcessIdx is null or exists (select 1 from Process p
+    where p.FamilyId = new.FamilyId and p.Ver = new.Ver and p.Idx = new.ProcessIdx)),
+  constraint BomLinePos check (Pos >= 1),
+  constraint BomLineChildParams check (json_type(ChildParams) = 'array'),
+  constraint BomLineChildVer check on insert, update (ChildVer is null or exists (
+    select 1 from Version v join Family f on f.Id = v.FamilyId
+    where f.Base = new.Component and v.Ver = new.ChildVer and v.State <> 'draft')),
+  constraint BomLineDraft check on insert, update (not exists (select 1 from committed.Version v
+    where v.FamilyId = new.FamilyId and v.Ver = new.Ver and v.State <> 'draft')),
+  constraint BomLineDraftDelete check on delete (not exists (select 1 from committed.Version v
+    where v.FamilyId = old.FamilyId and v.Ver = old.Ver and v.State <> 'draft')),
+  constraint BomLineAuditInsert check on insert (coalesce(CreatedBy = context.Actor and CreatedAt = context.Now
+    and UpdatedBy = CreatedBy and UpdatedAt = CreatedAt, false)),
+  constraint BomLineAuditUpdate check on update (coalesce(new.UpdatedBy = context.Actor and new.UpdatedAt = context.Now
+    and new.CreatedBy = old.CreatedBy and new.CreatedAt = old.CreatedAt, false))
+) with context (Actor text null, Now text null);
+
+-- "Where used": the lines that consume a family.
+index BomLineByComponent on BomLine(Component);
+
+-- Routing. The step itself is frozen at release. Its times may change after release, but only
+-- in a transaction that also records a new minor revision (product.md §5).
+table Process (
+  FamilyId text,
+  Ver integer,
+  Idx integer,
+  OperationCode text,
+  NextIdx integer null,
+  SetupTime text null,                    -- expressions of the parameters, in minutes
+  LaborPerUnit text null,
+  MachinePerUnit text null,
+  Description text null,
+  CreatedAt text default Now, CreatedBy text default Actor,
+  UpdatedAt text default Now, UpdatedBy text default Actor,
+  primary key (FamilyId, Ver, Idx),
+  constraint ProcessVersion foreign key (FamilyId, Ver) references Version(FamilyId, Ver) on delete cascade,
+  constraint ProcessOperation foreign key (OperationCode) references Operation(Code),
+  constraint ProcessIdx check (Idx >= 1),
+  constraint ProcessNext check on insert, update (NextIdx is null or exists (select 1 from Process p
+    where p.FamilyId = new.FamilyId and p.Ver = new.Ver and p.Idx = new.NextIdx)),
+  constraint ProcessDraftInsert check on insert (not exists (select 1 from committed.Version v
+    where v.FamilyId = new.FamilyId and v.Ver = new.Ver and v.State <> 'draft')),
+  constraint ProcessDraftUpdate check on update (not exists (select 1 from committed.Version v
+      where v.FamilyId = new.FamilyId and v.Ver = new.Ver and v.State <> 'draft')
+    or (new.FamilyId = old.FamilyId and new.Ver = old.Ver and new.Idx = old.Idx
+      and new.OperationCode = old.OperationCode
+      and coalesce(new.NextIdx = old.NextIdx, new.NextIdx is null and old.NextIdx is null)
+      and coalesce(new.Description = old.Description, new.Description is null and old.Description is null)
+      and coalesce((select max(m.Minor) from MinorRevision m where m.FamilyId = new.FamilyId and m.Ver = new.Ver), 0)
+        > coalesce((select max(m.Minor) from committed.MinorRevision m where m.FamilyId = new.FamilyId and m.Ver = new.Ver), 0))),
+  constraint ProcessDraftDelete check on delete (not exists (select 1 from committed.Version v
+    where v.FamilyId = old.FamilyId and v.Ver = old.Ver and v.State <> 'draft')),
+  -- No line may be left naming a deleted step, unless the whole version went with it.
+  constraint ProcessUnused check on delete (not exists (select 1 from BomLine b
+    where b.FamilyId = old.FamilyId and b.Ver = old.Ver and b.ProcessIdx = old.Idx)),
+  constraint ProcessAuditInsert check on insert (coalesce(CreatedBy = context.Actor and CreatedAt = context.Now
+    and UpdatedBy = CreatedBy and UpdatedAt = CreatedAt, false)),
+  constraint ProcessAuditUpdate check on update (coalesce(new.UpdatedBy = context.Actor and new.UpdatedAt = context.Now
+    and new.CreatedBy = old.CreatedBy and new.CreatedAt = old.CreatedAt, false))
+) with context (Actor text null, Now text null);
+
+-- ── Documentation, versioned by minor revision ─────────────────────────────────
+-- A row is valid from minor revision FromMinor up to, but not including, ToMinor (null: still
+-- valid). In a draft, rows are edited freely and FromMinor is 0. In a released version, a
+-- change is made in a transaction that records a new minor revision M: the old row is closed
+-- (ToMinor set to M, nothing else changed) and its replacement inserted with FromMinor = M.
+-- Rows of a released version are never deleted, so the text as of any minor revision can be
+-- reconstructed.
+
+table Document (
+  Id text primary key,                    -- ULID
+  FamilyId text,
+  Ver integer,
+  Kind text,                              -- 'drawing', 'cad', 'datasheet', 'label', …
+  Name text,
+  ContentRef text,                        -- where the file is kept
+  FromMinor integer default 0,
+  ToMinor integer null,
+  CreatedAt text default Now, CreatedBy text default Actor,
+  UpdatedAt text default Now, UpdatedBy text default Actor,
+  constraint DocumentVersion foreign key (FamilyId, Ver) references Version(FamilyId, Ver) on delete cascade,
+  constraint DocumentRange check (FromMinor >= 0 and coalesce(ToMinor > FromMinor, true)),
+  constraint DocumentInsert check on insert (case
+    when exists (select 1 from committed.Version v where v.FamilyId = new.FamilyId and v.Ver = new.Ver and v.State <> 'draft')
+    then new.ToMinor is null
+      and new.FromMinor = coalesce((select max(m.Minor) from MinorRevision m where m.FamilyId = new.FamilyId and m.Ver = new.Ver), 0)
+      and new.FromMinor > coalesce((select max(m.Minor) from committed.MinorRevision m where m.FamilyId = new.FamilyId and m.Ver = new.Ver), 0)
+    else new.FromMinor = 0 and new.ToMinor is null end),
+  constraint DocumentUpdate check on update (case
+    when exists (select 1 from committed.Version v where v.FamilyId = new.FamilyId and v.Ver = new.Ver and v.State <> 'draft')
+    then new.Id = old.Id and new.FamilyId = old.FamilyId and new.Ver = old.Ver and new.Kind = old.Kind
+      and new.Name = old.Name and new.ContentRef = old.ContentRef and new.FromMinor = old.FromMinor
+      and old.ToMinor is null
+      and new.ToMinor = coalesce((select max(m.Minor) from MinorRevision m where m.FamilyId = new.FamilyId and m.Ver = new.Ver), 0)
+      and new.ToMinor > coalesce((select max(m.Minor) from committed.MinorRevision m where m.FamilyId = new.FamilyId and m.Ver = new.Ver), 0)
+    else new.FromMinor = 0 and new.ToMinor is null end),
+  constraint DocumentDraftDelete check on delete (not exists (select 1 from committed.Version v
+    where v.FamilyId = old.FamilyId and v.Ver = old.Ver and v.State <> 'draft')),
+  constraint DocumentUnused check on delete (not exists (select 1 from Note n where n.DocumentId = old.Id)),
+  constraint DocumentAuditInsert check on insert (coalesce(CreatedBy = context.Actor and CreatedAt = context.Now
+    and UpdatedBy = CreatedBy and UpdatedAt = CreatedAt, false)),
+  constraint DocumentAuditUpdate check on update (coalesce(new.UpdatedBy = context.Actor and new.UpdatedAt = context.Now
+    and new.CreatedBy = old.CreatedBy and new.CreatedAt = old.CreatedAt, false))
+) with context (Actor text null, Now text null);
+
+table Note (
+  Id text primary key,                    -- ULID
+  FamilyId text,
+  Ver integer,
+  ProcessIdx integer,
+  Seq integer,
+  Type text,
+  Body text,                              -- markdown
+  DocumentId text null,
+  Measure json null,                      -- qc only: {name, units, nominal, min, max} or {passfail: true}
+  FromMinor integer default 0,
+  ToMinor integer null,
+  CreatedAt text default Now, CreatedBy text default Actor,
+  UpdatedAt text default Now, UpdatedBy text default Actor,
+  constraint NoteProcess foreign key (FamilyId, Ver, ProcessIdx) references Process(FamilyId, Ver, Idx) on delete cascade,
+  -- A check rather than a foreign key, for the same reason as BomLineProcess.
+  constraint NoteDocument check on insert, update (DocumentId is null or exists (select 1 from Document d
+    where d.Id = new.DocumentId)),
+  constraint NoteType check (Type in ('step', 'fig', 'qc')),
+  constraint NoteMeasure check (Type = 'qc' or Measure is null),
+  constraint NoteRange check (FromMinor >= 0 and coalesce(ToMinor > FromMinor, true)),
+  constraint NoteInsert check on insert (case
+    when exists (select 1 from committed.Version v where v.FamilyId = new.FamilyId and v.Ver = new.Ver and v.State <> 'draft')
+    then new.ToMinor is null
+      and new.FromMinor = coalesce((select max(m.Minor) from MinorRevision m where m.FamilyId = new.FamilyId and m.Ver = new.Ver), 0)
+      and new.FromMinor > coalesce((select max(m.Minor) from committed.MinorRevision m where m.FamilyId = new.FamilyId and m.Ver = new.Ver), 0)
+    else new.FromMinor = 0 and new.ToMinor is null end),
+  constraint NoteUpdate check on update (case
+    when exists (select 1 from committed.Version v where v.FamilyId = new.FamilyId and v.Ver = new.Ver and v.State <> 'draft')
+    then new.Id = old.Id and new.FamilyId = old.FamilyId and new.Ver = old.Ver and new.ProcessIdx = old.ProcessIdx
+      and new.Seq = old.Seq and new.Type = old.Type and new.Body = old.Body
+      and coalesce(new.DocumentId = old.DocumentId, new.DocumentId is null and old.DocumentId is null)
+      and coalesce(new.Measure = old.Measure, new.Measure is null and old.Measure is null)
+      and new.FromMinor = old.FromMinor and old.ToMinor is null
+      and new.ToMinor = coalesce((select max(m.Minor) from MinorRevision m where m.FamilyId = new.FamilyId and m.Ver = new.Ver), 0)
+      and new.ToMinor > coalesce((select max(m.Minor) from committed.MinorRevision m where m.FamilyId = new.FamilyId and m.Ver = new.Ver), 0)
+    else new.FromMinor = 0 and new.ToMinor is null end),
+  constraint NoteDraftDelete check on delete (not exists (select 1 from committed.Version v
+    where v.FamilyId = old.FamilyId and v.Ver = old.Ver and v.State <> 'draft')),
+  constraint NoteAuditInsert check on insert (coalesce(CreatedBy = context.Actor and CreatedAt = context.Now
+    and UpdatedBy = CreatedBy and UpdatedAt = CreatedAt, false)),
+  constraint NoteAuditUpdate check on update (coalesce(new.UpdatedBy = context.Actor and new.UpdatedAt = context.Now
+    and new.CreatedBy = old.CreatedBy and new.CreatedAt = old.CreatedAt, false))
+) with context (Actor text null, Now text null);
+
+-- ── Parts and packages ─────────────────────────────────────────────────────────
+
+table Part (
+  Id text primary key,                    -- ULID
+  Pnum integer unique,                    -- human part number, never reused
+  FamilyId text,
+  Params json,                            -- canonical parameter values, in order
+  Status text default 'proposed',
+  MinLevel integer null,                  -- stock policy, in the family unit's scaled integers
+  TargetLevel integer null,
+  MinBuy integer null,
+  Weight integer null,                    -- grams
+  Length integer null,                    -- millimeters
+  Width integer null,
+  Height integer null,
+  StackFactor integer null,
+  Tracking text default 'none',
+  ShelfLifeDays integer null,
+  Comment text null,
+  CreatedAt text default Now, CreatedBy text default Actor,
+  UpdatedAt text default Now, UpdatedBy text default Actor,
+  constraint PartFamily foreign key (FamilyId) references Family(Id),
+  constraint PartCombination unique (FamilyId, Params),
+  constraint PartPnum check (Pnum >= 1),
+  constraint PartParams check (json_type(Params) = 'array'),
+  constraint PartStatus check (Status in ('proposed', 'active', 'restricted', 'obsolete')),
+  constraint PartTracking check (Tracking in ('none', 'run', 'serial')),
+  constraint PartLevels check (coalesce(MinLevel >= 0, true) and coalesce(TargetLevel >= 0, true)
+    and coalesce(MinBuy > 0, true) and coalesce(ShelfLifeDays > 0, true)),
+  constraint PartKind check on insert, update (exists (select 1 from Family f join Class c on c.Prefix = f.ClassPrefix
+    where f.Id = new.FamilyId and c.Kind in ('part', 'custom'))),
+  constraint PartIdentityFixed check on update (new.Id = old.Id and new.FamilyId = old.FamilyId and new.Params = old.Params),
+  constraint PartNoDelete check on delete (false),
+  constraint PartAuditInsert check on insert (coalesce(CreatedBy = context.Actor and CreatedAt = context.Now
+    and UpdatedBy = CreatedBy and UpdatedAt = CreatedAt, false)),
+  constraint PartAuditUpdate check on update (coalesce(new.UpdatedBy = context.Actor and new.UpdatedAt = context.Now
+    and new.CreatedBy = old.CreatedBy and new.CreatedAt = old.CreatedAt, false))
+) with context (Actor text null, Now text null);
+
+-- Derived at release: the part's explosion hash under each released version, and its
+-- effective interchangeability with the previous version (product.md §2, §6). Insert-only.
+table PartVersion (
+  PartId text,
+  Ver integer,
+  ExplosionHash text,
+  Interchangeable boolean,
+  CreatedAt text default Now, CreatedBy text default Actor,
+  UpdatedAt text default Now, UpdatedBy text default Actor,
+  primary key (PartId, Ver),
+  constraint PartVersionPart foreign key (PartId) references Part(Id),
+  constraint PartVersionReleased check on insert (exists (select 1 from Part p join Version v on v.FamilyId = p.FamilyId
+    where p.Id = new.PartId and v.Ver = new.Ver and v.State <> 'draft')),
+  constraint PartVersionInsertOnly check on update, delete (false),
+  constraint PartVersionAuditInsert check on insert (coalesce(CreatedBy = context.Actor and CreatedAt = context.Now
+    and UpdatedBy = CreatedBy and UpdatedAt = CreatedAt, false))
+) with context (Actor text null, Now text null);
+
+table StandardPackage (
+  Id text primary key,                    -- ULID
+  FamilyId text,
+  Name text,
+  Params json,                            -- values in order; null leaves one open for order time
+  Description text null,
+  CreatedAt text default Now, CreatedBy text default Actor,
+  UpdatedAt text default Now, UpdatedBy text default Actor,
+  constraint StandardPackageFamily foreign key (FamilyId) references Family(Id),
+  constraint StandardPackageName unique (FamilyId, Name),
+  constraint StandardPackageParams check (json_type(Params) = 'array'),
+  constraint StandardPackageKind check on insert, update (exists (select 1 from Family f join Class c on c.Prefix = f.ClassPrefix
+    where f.Id = new.FamilyId and c.Kind = 'package')),
+  constraint StandardPackageAuditInsert check on insert (coalesce(CreatedBy = context.Actor and CreatedAt = context.Now
+    and UpdatedBy = CreatedBy and UpdatedAt = CreatedAt, false)),
+  constraint StandardPackageAuditUpdate check on update (coalesce(new.UpdatedBy = context.Actor and new.UpdatedAt = context.Now
+    and new.CreatedBy = old.CreatedBy and new.CreatedAt = old.CreatedAt, false))
+) with context (Actor text null, Now text null);

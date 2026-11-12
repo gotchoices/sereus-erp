@@ -69,3 +69,42 @@ moved into Quereus constraints. It is the template for how a pass-2 ATI schema w
 * **Contract shops and in-house shops**: a work-order strand shared with the shop. The shop closes
   material and finished-goods MTRs from its side.
 * **Customers**: an order and RMA strand, if ever wanted.
+
+## Quereus as used here
+
+Checked against `@quereus/quereus` 4.25 while writing [specs/catalog.qsql](specs/catalog.qsql).
+Note that the local `ser/quereus` checkout can be older than the published package. Quereus is
+not SQLite:
+
+* **Nulls:**
+  * Columns are NOT NULL unless declared `null`.
+  * A CHECK that evaluates to NULL passes. Any check that reads a nullable column or
+    `context.*` must be written to be false when it should fail, for example
+    `coalesce(…, false)`.
+  * A write with no `with context` clause sees null context values.
+* **No `regexp`, `glob`, `a is b` or `is distinct from`.**
+  * For a character-set check, use `trim(x, 'allowed chars') = ''`.
+  * For null-safe equality, use `coalesce(a = b, a is null and b is null)`.
+  * `like` is case-sensitive.
+* **Reserved words make poor column names.** For example, `By` fails to parse.
+* **Deferred checks:** a CHECK with a subquery is deferred to commit.
+  * `committed.T` reads T as of the start of the transaction. That is how "already released,
+    so frozen" is expressed.
+  * Assertions (`assertion … check (…)`) are global rules checked at commit.
+* **Foreign keys:**
+  * They are enforced, checked at commit on the child side, and RESTRICT by default.
+  * Cascades run in no guaranteed order. A RESTRICT key between two tables that both cascade
+    from one parent can block the parent's delete, so such links are written as deferred
+    checks instead.
+* **Other features that work:**
+  * partial unique indexes (`unique index … where …`);
+  * generated columns;
+  * `json` columns, compared structurally (a unique key over a JSON array ignores spelling);
+  * `with context (…)` per table, with bare names in defaults and `context.x` in checks.
+* **Sereus constraints on schemas:**
+  * A schema is a body of bare items: no `create`, no `seed`.
+  * Rules may not depend on anything outside the strand, because peers re-run each
+    transaction to validate it ([sereus-requirements.md](sereus-requirements.md)).
+* Bonum's notes on Quereus read performance (`ser/bonum/docs/quereus-perf.md`) still apply.
+  The ATI corpus load will show how assertions behave at volume.
+

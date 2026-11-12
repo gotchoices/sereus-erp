@@ -1,6 +1,8 @@
 # Product catalog
 
-Owned by the **catalog** module ([architecture.md](architecture.md) §2).
+Owned by the **catalog** module ([architecture.md](architecture.md) §2). The executable
+schema is [catalog.qsql](catalog.qsql). It enforces the invariants below except where it says
+otherwise, and its tests are in `packages/core/src/catalog/`.
 
 ## 1. Purpose
 
@@ -51,7 +53,8 @@ possible seed. The startup defines its own.
 * class, unit (the unit its quantities are counted in), short description.
 * `status`: `active`, `restricted` (no new orders or buys) or `obsolete`.
 * `current_version`: the released version used when none is specified.
-* `draft_version`: the version under development, if any.
+* The draft version under development, if any, is the family's version in state `draft`. It
+  is not stored as a separate field.
 * **Invariant:** at most one draft version exists, and it is numbered `current_version + 1`
   (pass-3 rule).
 
@@ -206,7 +209,8 @@ The owner's question: may I change manufacturing notes or add QC criteria withou
 * **Version** changes (`.N`) cover what the product **is**: parameters, BOM lines and
   formulas, spec, routing that changes the result.
 * **Minor revisions** cover how it is **made and checked**: notes, figures, work instructions,
-  QC criteria, documents, typo fixes. They also cover adding or changing process *times*.
+  QC criteria, documents, typo fixes. They also cover changing process *times*. Old times are
+  not kept, unlike notes and documents. The minor revision's summary records the change.
 * A released version starts at minor revision 0. Saving any change to its notes, QC criteria,
   documents or process times **creates the next minor revision automatically**, recorded with
   who, when and a summary. Nobody has to manage the numbers.
@@ -275,8 +279,10 @@ Options are expressed in the BOM, not as a variant matrix:
 
 ## 10. ATI migration
 
-* Family, parameter, part and spreadsheet data from the 2014 dump
-  (`data/ati-2014/`) serve as the test corpus, not as production data. Each ATI family
+* The working data set is the hydroponics product line, which is small. The family,
+  parameter, part and spreadsheet data from the 2014 dump (`data/ati-2014/`) serve only as a
+  **test corpus**: a large load (about how the schema and the stores behave at volume) and a
+  test of BOM scripting. It is never production data. Each ATI family
   becomes version 1. `revision`/`minrev` go into the change summary.
 * ATI `prd_spread.oper` (4,102 lines) maps to `BomLine.process`. `prd_base_oper` maps to
   processes, with times empty, as they were in ATI.

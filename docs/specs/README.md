@@ -16,6 +16,7 @@ deliberately revisable: if one causes trouble in practice, change it here first.
 | Spec | Covers |
 |---|---|
 | [architecture.md](architecture.md) | Modules and strands, record ownership, cross-strand reads, posting between modules, identifiers, quantities and money, roles, history and migration |
+| [catalog.qsql](catalog.qsql) | The executable Quereus schema of the catalog strand (product.md) |
 | [product.md](product.md) | Product catalog: classes, families, versions and minor revisions, parameters, parts and part numbers, packages, BOM lines, routing, notes and QC, interchangeability |
 | [bom-engine.md](bom-engine.md) | The parametric engine: explosion algorithm, script sandbox and host API, depth modes, costing and pricing, determinism, results and stamps, migration from the ATI Tcl corpus |
 | [operations.md](operations.md) | Locations, documents and moves, statuses, balances, demand and allocation, planning and coverage views, order lines with packages and re-explosion, runs and serials, receiving, shipping, adjustments, postings to Bonum and AR |
