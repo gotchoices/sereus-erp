@@ -104,14 +104,18 @@ needs no cross-strand joins, postings or Bonum.
      `design/specs/domain/`.
    * ✅ `design/specs/project.md`: web in SvelteKit, mobile in React Native (owner, November
      2026). Publisher id still open.
-   * ✅ Targets scaffolded: `apps/web` (SvelteKit, dependencies not yet installed) and
-     `apps/mobile` (React Native 0.82.1, as chat; CocoaPods not yet installed).
+   * ✅ Targets scaffolded. `apps/web` (`@wyatt/web`, SvelteKit) is a workspace member and
+     builds. `apps/mobile` (React Native 0.82.1) is **parked** until the web product section
+     works (owner, November 2026).
    * 🔄 Stories, named `<module>-NN-<name>.md`: `design/stories/web/product-01…04`
      (engineer creating a family), drafts for the owner to edit.
-   * ⬜ Wiring before the first screen: web joins the yarn workspace; mobile stays its own
-     yarn project linked to `packages/*` as chat's is (Metro single-copy config, shims);
-     Sereus node hosts per platform; mock variants from the in-memory catalog.
-   * ⬜ Then: web navigation and screen specs, and screens one vertical slice at a time.
+   * 🔄 Navigation planning: `design/specs/web/navigation.md` and `screens/index.md` drafted,
+     awaiting review. First slice: FamilyList with NewFamily.
+   * ⬜ Backend for the web app: a real Sereus node (proposed: in the SvelteKit server process
+     first, a browser node later). Mock: no JSON fixtures; the in-memory catalog behind the
+     app's one mock switch.
+   * ⬜ Test data: import the ATI 2014 catalog into a local-only strand once the first screens
+     work. Never into a strand shared with others, and never in committed screenshots.
    * ⬜ Before the UI: three prodim topics product.md lacks: generic and custom "reserve"
      basenames, document templates, finding documents.
 

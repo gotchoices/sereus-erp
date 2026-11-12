@@ -5,7 +5,8 @@
   "packageManager": "yarn@4.3.1",
   "workspaces": [
     "packages/*",
-    "apps/cli"
+    "apps/cli",
+    "apps/web"
   ],
   "scripts": {
     "build": "yarn workspaces foreach --all --topological --exclude sereus-erp run build",

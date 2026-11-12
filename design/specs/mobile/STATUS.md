@@ -1,5 +1,9 @@
 # Target STATUS (phase checklist)
 
+> **Parked** (owner, November 2026): the scaffold exists (React Native 0.82.1, as chat), but no
+> work happens here until the web target's product section works. Then: stories, the chat-style
+> Sereus wiring (shims, leveldb, offline journal, Metro single-copy config), `pod install`.
+
 This file tracks progress for a single app target (`<target>`). It is meant to be updated by the human (with agent assistance).
 
 Phases are defined in `appeus/docs/DESIGN.md` (authoritative).

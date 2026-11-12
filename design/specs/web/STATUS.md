@@ -5,18 +5,18 @@ This file tracks progress for a single app target (`<target>`). It is meant to b
 Phases are defined in `appeus/docs/DESIGN.md` (authoritative).
 
 ## Bootstrap / Discovery (shared)
-- [ ] `design/specs/project.md` is complete enough to proceed
+- [x] `design/specs/project.md` is complete enough to proceed (publisher id open)
 - [ ] (Mobile targets) Apply the app id (Android `applicationId`, iOS bundle id) in the native build trees (from `design/specs/project.md`, e.g. `org.sereus.health`)
 
 ## Story Generation (this target)
-- [ ] Stories exist under `design/stories/<target>/` and describe the intended experience
+- [x] Stories exist under `design/stories/web/` (product-01…04, drafts for the owner to edit)
 
 ## Navigation Planning (this target)
-- [ ] `design/specs/<target>/navigation.md` exists and is reviewed
-- [ ] `design/specs/<target>/screens/index.md` lists the intended screens/routes
+- [ ] `design/specs/web/navigation.md` exists (drafted) and is reviewed
+- [x] `design/specs/web/screens/index.md` lists the intended screens/routes (draft)
 
 ## Domain Contract (shared)
-- [ ] `design/specs/domain/` is sufficient to support this target’s slices
+- [x] `design/specs/domain/` is sufficient to support this target’s first slices (product.md, catalog.qsql, `@wyatt/core/catalog`)
 
 ## Screen/Component Slicing (this target)
 - [ ] Key screens/components have specs under `design/specs/<target>/screens/` and `design/specs/<target>/components/`

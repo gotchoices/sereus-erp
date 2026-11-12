@@ -69,7 +69,7 @@ belongs to that module's strand (decision log, STATUS.md).
 | App Name | Platform | Framework | Status |
 |----------|----------|-----------|--------|
 | web | browser | sveltekit | scaffolded; product section first |
-| mobile | iOS/Android | react-native | scaffolded; after web's product section |
+| mobile | iOS/Android | react-native | scaffolded, **parked** until the web product section works |
 | cli | node | typescript (`@wyatt/cli`) | scaffold exists |
 | vendor | browser | sveltekit | future: a vendor's own app, vendor link strand only |
 | shop | iOS/Android or browser | tbd | future: an outside shop's app, shop link strand only |
