@@ -159,6 +159,8 @@ The reasoning is in [Design.md](Design.md).
 | Integer quantities (per-unit scale) and integer money | Bonum convention |
 | WyattERP is the parent brand. This repository, `sereus-erp`, is its Sereus-based incarnation; the ATI ERP and wylib, wyseman and wyselib are its legacy members | owner, November 2026 |
 | Packages: `@wyatt/core` holds the control logic, and computational modules get specific names (`@wyatt/bom-engine`), never a general "engine" | owner, November 2026 |
+| Partnames for engineering, part numbers for commerce: a number is issued when first needed, and operations that need one wait until it is confirmed | owner, November 2026 |
+| One ERP app per platform (`web`, `mobile`), each module a section shown by strand membership; the product manager is the first section. Separate targets only for other parties (vendor, shop) | owner, November 2026 |
 
 ## Open items
 
@@ -167,26 +169,36 @@ The reasoning is in [Design.md](Design.md).
   checks (product.md §9) need signed writes against the strand's member keys, as Taleus does
   with `verify(digest(…))`. To be designed once for all modules.
 
-* ❓ **Allocating part numbers across devices.** `parts.create` takes the highest `Pnum` plus
-  one, inside the inserting transaction.
+* 🔄 **Allocating part numbers across devices.** Owner's rule (November 2026): partnames
+  for engineering, part numbers for commerce. A number is issued only when something needs
+  one, and an operation that needs it is blocked until the number is confirmed
+  ([specs/product.md](specs/product.md) §3). Numbers are in their own insert-only table,
+  `PartNumber`, so that approval and numbering are separate writes.
   * **No sequences, by design.** Quereus has no sequence or auto-increment objects
     (`ser/quereus/docs/architecture.md`, "Sequential ID Generation"): validators re-execute
     a transaction's statements, so a value must come from the tables or the mutation
-    context, never from hidden counter state. A sequence in a distributed store is a
-    counter row (or max + 1) plus optimistic concurrency.
-  * **Online, a race should fail cleanly.** Optimystic treats the read of the maximum as a
-    dependency. When two machines insert the same unique value at once, the loser's whole
-    transaction is refused at pend with the ordinary constraint error
-    (`ser/optimystic/docs/transactions.md`, regression `two-node-unique-value-race`).
-    Working default: retry with the next number, a few times. Not yet tested with two
-    nodes on the catalog strand.
-  * **Offline is unsolved.** A write made while a node is alone, re-issued later, can fork
-    a collection (`ser/sereus/docs/architecture.md`, "Writes made while alone").
-    Optimystic's CRDT-sync design (`crdt-sync.md`) foresees tentative results that are
-    confirmed at a stability horizon, plus a "fence" for writes that must be sequenced.
-    That fits a number that is provisional until it is durable, but it is a design, not
-    shipped. Until then, numbering needs a connected cohort. The partname
-    (`a:chan(1200,6,75)`) is already a unique human name while a number is pending.
+    context. A distributed sequence is "highest plus one" with optimistic concurrency.
+    Taleus avoids running numbers altogether, using fresh IDs tagged `"optimystic.fresh"`.
+  * ✅ **Online contention works.** `parts.number` takes the highest plus one and, when the
+    insert is refused as a duplicate, tries the next number. `src/catalog/numbering.test.ts`
+    numbers parts on two devices of one strand at the same moment, five rounds. In three
+    runs there were 10 collisions in 15 rounds. The cohort refused each loser with the
+    ordinary unique-constraint error, its second attempt took the next number, no number
+    was given twice, and both devices converged.
+  * ⬜ **Offline next.** Sereus offline mode (strands.md, "Offline mode" and "A commit's
+    durability") saves a write locally, queues it, and reports `queued` → `committed` or
+    `failed`, then `heldElsewhere` / `strand:commit-held`. A queued number that another
+    device took first fails when sent, and its row leaves the local view. The plan:
+    1. a test node with `strandOffline` and a journal (as taleus's Node host does);
+    2. write each number with `returning StampId() as Tx`, and report its state from
+       `offline.status(Tx)` and `commitDurability(Tx)` (taleus `store.ts` and chat
+       `delivery.ts` are the references);
+    3. on `failed`, issue the next number again;
+    4. a part counts as numbered for orders only once its number is committed;
+    5. the scenario: two devices number while partitioned, then reconnect.
+    Known limit: durability reports are kept in memory, so after a restart a committed
+    number shows as unconfirmed (Optimystic backlog
+    `feat-a-host-can-ask-whether-an-earlier-commit-is-fully-held`).
 
 * ✅ **Quereus multi-strand mechanism.** Sereus gives each strand its own `Database`, with
   its tables in schema `App`, and Quereus has no `ATTACH`. Cross-strand reads are therefore

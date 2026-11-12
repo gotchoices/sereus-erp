@@ -10,7 +10,7 @@
  */
 import type { Database, SqlValue } from '@quereus/quereus';
 import { canonicalNumber, formatPartname, isBase, newId, parsePartname } from '@wyatt/domain';
-import { attempt, CoreFailure, type Result } from '../result.js';
+import { attempt, CoreFailure, toCoreError, type Result } from '../result.js';
 import { rows, serialized, transaction, type Row } from '../sql.js';
 import type {
   BomLineDef, CatalogModel, Class, DocumentDef, DraftDefinition, Family, FamilyFilter, FamilyPatch,
@@ -55,7 +55,7 @@ function mapFamily(r: Row): Family {
 function mapPart(r: Row): Part {
   const params = json<string[]>(r.Params);
   return {
-    id: String(r.Id), pnum: Number(r.Pnum), familyId: String(r.FamilyId), base: String(r.Base), params,
+    id: String(r.Id), pnum: num(r.Pnum), familyId: String(r.FamilyId), base: String(r.Base), params,
     partname: formatPartname(String(r.Base), params),
     status: r.Status as Part['status'], minLevel: num(r.MinLevel), targetLevel: num(r.TargetLevel), minBuy: num(r.MinBuy),
     weight: num(r.Weight), length: num(r.Length), width: num(r.Width), height: num(r.Height),
@@ -66,7 +66,10 @@ function mapPart(r: Row): Part {
 
 const FAMILY_SELECT = `select f.*, d.Ver as DraftVer from App.Family f
   left join (select FamilyId, Ver from App.Version where State = 'draft') d on d.FamilyId = f.Id`;
-const PART_SELECT = `select p.*, f.Base from App.Part p join App.Family f on f.Id = p.FamilyId`;
+const PART_SELECT = `select p.*, f.Base, n.Pnum from App.Part p join App.Family f on f.Id = p.FamilyId
+  left join App.PartNumber n on n.PartId = p.Id`;
+/** Tries at numbering a part when other devices keep taking the number first. */
+const NUMBER_ATTEMPTS = 8;
 
 export function createCatalogModel(db: Database, opts: CatalogModelOptions): CatalogModel {
   const clock = opts.now ?? (() => new Date().toISOString());
@@ -181,7 +184,7 @@ export function createCatalogModel(db: Database, opts: CatalogModelOptions): Cat
       return mapPart(r);
     }
     if ('pnum' in ref) {
-      const [r] = await rows(db, `${PART_SELECT} where p.Pnum = ?`, [ref.pnum]);
+      const [r] = await rows(db, `${PART_SELECT} where n.Pnum = ?`, [ref.pnum]);
       if (!r) throw notFound(`no part number ${ref.pnum}`);
       return mapPart(r);
     }
@@ -462,7 +465,7 @@ export function createCatalogModel(db: Database, opts: CatalogModelOptions): Cat
         const params: SqlValue[] = [];
         if (filter.familyId) { where.push('p.FamilyId = ?'); params.push(filter.familyId); }
         if (filter.status) { where.push('p.Status = ?'); params.push(filter.status); }
-        return (await rows(db, `${PART_SELECT}${where.length ? ` where ${where.join(' and ')}` : ''} order by p.Pnum`, params)).map(mapPart);
+        return (await rows(db, `${PART_SELECT}${where.length ? ` where ${where.join(' and ')}` : ''} order by f.Base, p.Id`, params)).map(mapPart);
       }),
 
       canonical: (familyIdOrBase: string, params: string[]) => op(async () => (await canonical(await family(familyIdOrBase), params)) as string[]),
@@ -470,15 +473,32 @@ export function createCatalogModel(db: Database, opts: CatalogModelOptions): Cat
       create: (familyIdOrBase: string, params: string[], fields: Partial<PartFields> = {}) => op(async (w) => {
         const fam = await family(familyIdOrBase);
         const values = (await canonical(fam, params)) as string[];
-        const [taken] = await rows(db, 'select Pnum from App.Part where FamilyId = ? and Params = ?', [fam.id, JSON.stringify(values)]);
-        if (taken) throw refused('PartCombination', `${formatPartname(fam.base, values)} is already part ${taken.Pnum}`);
+        const [taken] = await rows(db, `${PART_SELECT} where p.FamilyId = ? and p.Params = ?`, [fam.id, JSON.stringify(values)]);
+        if (taken) throw refused('PartCombination', `${formatPartname(fam.base, values)} is already a part`);
         const id = newId();
-        // Open: two devices numbering at once collide on Pnum; see STATUS.md, open items.
-        await inTxn(async () => {
-          const [r] = await rows(db, 'select max(Pnum) as M from App.Part');
-          await w.insert('Part', { Id: id, Pnum: (num(r?.M) ?? 0) + 1, FamilyId: fam.id, Params: JSON.stringify(values), ...partFieldRow(fields) });
-        });
+        await inTxn(() => w.insert('Part', { Id: id, FamilyId: fam.id, Params: JSON.stringify(values), ...partFieldRow(fields) }));
         return partBy({ id });
+      }),
+
+      number: (ref: PartRef) => op(async (w) => {
+        const part = await partBy(ref);
+        if (part.pnum !== null) return part;
+        // Highest plus one. A device that took the same number first makes this insert fail
+        // (on a strand, when the cohort judges it); then try the next one.
+        for (let attempt = 1; ; attempt++) {
+          try {
+            await inTxn(async () => {
+              const [r] = await rows(db, 'select max(Pnum) as M from App.PartNumber');
+              await w.insert('PartNumber', { Pnum: (num(r?.M) ?? 0) + 1, PartId: part.id });
+            });
+            break;
+          } catch (err) {
+            const now = await partBy({ id: part.id });
+            if (now.pnum !== null) return now; // another device numbered this part
+            if (toCoreError(err).kind !== 'duplicate' || attempt >= NUMBER_ATTEMPTS) throw err;
+          }
+        }
+        return partBy({ id: part.id });
       }),
 
       update: (id: string, patch: Partial<PartFields>) => op(async (w) => {

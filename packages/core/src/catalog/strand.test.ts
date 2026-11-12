@@ -48,7 +48,8 @@ it('defines, releases and freezes a family, and numbers a part, on a strand', as
 
   await expect(db.exec(`update App.Parameter ${C} set Description = 'x' where FamilyId = 'F1'`)).rejects.toThrow(/ParameterDraft/);
 
-  await db.exec(`insert into App.Part (Id, Pnum, FamilyId, Params) ${C} values ('P1', 1, 'F1', '["M6"]')`);
-  await expect(db.exec(`insert into App.Part (Id, Pnum, FamilyId, Params) ${C} values ('P2', 2, 'F1', '[ "M6" ]')`)).rejects.toThrow(/UNIQUE/);
-  expect(await rows(db, `select Pnum, Params from App.Part`)).toEqual([{ Pnum: 1, Params: ['M6'] }]);
+  await db.exec(`insert into App.Part (Id, FamilyId, Params) ${C} values ('P1', 'F1', '["M6"]')`);
+  await expect(db.exec(`insert into App.Part (Id, FamilyId, Params) ${C} values ('P2', 'F1', '[ "M6" ]')`)).rejects.toThrow(/UNIQUE/);
+  await db.exec(`insert into App.PartNumber (Pnum, PartId) ${C} values (1, 'P1')`);
+  expect(await rows(db, `select n.Pnum, p.Params from App.Part p join App.PartNumber n on n.PartId = p.Id`)).toEqual([{ Pnum: 1, Params: ['M6'] }]);
 });

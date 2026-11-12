@@ -254,28 +254,41 @@ describe('minor revisions (product.md §5)', () => {
 });
 
 describe('parts and packages', () => {
-  const part = (id: string, pnum: number, family: string, params: string) =>
-    db.exec(`insert into App.Part (Id, Pnum, FamilyId, Params) ${C} values ('${id}', ${pnum}, '${family}', '${params}')`);
+  const part = (id: string, family: string, params: string) =>
+    db.exec(`insert into App.Part (Id, FamilyId, Params) ${C} values ('${id}', '${family}', '${params}')`);
+  const number = (pnum: number, partId: string) =>
+    db.exec(`insert into App.PartNumber (Pnum, PartId) ${C} values (${pnum}, '${partId}')`);
 
-  it('numbers approved combinations of part families, one part per combination', async () => {
-    await part('P1', 1001, 'F-screw', '[12]');
-    await expect(part('P2', 1002, 'F-screw', '[ 12 ]')).rejects.toThrow(/UNIQUE/); // same value, other spelling
-    await expect(part('P3', 1001, 'F-screw', '[16]')).rejects.toThrow(/UNIQUE/);
+  it('keeps one part per approved combination of a part family', async () => {
+    await part('P1', 'F-screw', '[12]');
+    await expect(part('P2', 'F-screw', '[ 12 ]')).rejects.toThrow(/UNIQUE/); // same value, other spelling
     await expect(db.exec(`delete from App.Part where Id = 'P1'`)).rejects.toThrow(/PartNoDelete/);
     await expect(db.exec(`update App.Part ${C} set Params = '[16]' where Id = 'P1'`)).rejects.toThrow(/PartIdentityFixed/);
     await db.exec(`update App.Part ${C} set Status = 'active', MinLevel = 50 where Id = 'P1'`);
   });
 
+  it('numbers a part once, with a number never reused', async () => {
+    await part('P1', 'F-screw', '[12]');
+    await part('P2', 'F-screw', '[16]');
+    await number(1001, 'P1');
+    await expect(number(1002, 'P1')).rejects.toThrow(/UNIQUE/); // a part has one number
+    await expect(number(1001, 'P2')).rejects.toThrow(/UNIQUE/); // a number has one part
+    await expect(number(0, 'P2')).rejects.toThrow(/PartNumberPositive/);
+    await expect(txn(db, [`insert into App.PartNumber (Pnum, PartId) ${C} values (1003, 'none')`])).rejects.toThrow(/PartNumberPart/);
+    await expect(db.exec(`update App.PartNumber ${C} set Pnum = 1002 where PartId = 'P1'`)).rejects.toThrow(/PartNumberInsertOnly/);
+    await expect(db.exec(`delete from App.PartNumber where PartId = 'P1'`)).rejects.toThrow(/PartNumberInsertOnly/);
+  });
+
   it('never numbers a package, and keeps standard packages to package families', async () => {
     await txn(db, [`insert into App.Family (Id, Base, UnitCode, Description) ${C} values ('F-kit', '@:kit', 'ea', 'Kit')`]);
-    await expect(part('P9', 1009, 'F-kit', '[]')).rejects.toThrow(/PartKind/);
+    await expect(part('P9', 'F-kit', '[]')).rejects.toThrow(/PartKind/);
     await expect(db.exec(`insert into App.StandardPackage (Id, FamilyId, Name, Params) ${C} values ('S1', 'F-chan', 'std', '[]')`))
       .rejects.toThrow(/StandardPackageKind/);
     await db.exec(`insert into App.StandardPackage (Id, FamilyId, Name, Params) ${C} values ('S1', 'F-kit', '4 x 2400', '[4, null]')`);
   });
 
   it('records part versions only for released versions, insert-only', async () => {
-    await part('P1', 1001, 'F-screw', '[12]');
+    await part('P1', 'F-screw', '[12]');
     await db.exec(`insert into App.PartVersion (PartId, Ver, ExplosionHash, Interchangeable) ${C} values ('P1', 1, 'h1', true)`);
     await expect(db.exec(`insert into App.PartVersion (PartId, Ver, ExplosionHash, Interchangeable) ${C} values ('P1', 2, 'h2', true)`))
       .rejects.toThrow(/PartVersionReleased/);

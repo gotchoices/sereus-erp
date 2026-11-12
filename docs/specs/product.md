@@ -143,7 +143,7 @@ An **approved parameter combination** of a family whose class kind is `part` or 
 
 | Field | Meaning |
 |---|---|
-| pnum | Human part number. An integer, auto-allocated from a sequence, unique, never reused |
+| pnum | Human part number. An integer, unique, never reused. Issued when the part first needs one, not on approval (§3) |
 | family, params | The canonical parameter values. **Unique per family** (`prd_part` rule) |
 | status | `proposed` → `active` → `restricted` → `obsolete` (ATI `elevel` gates, simplified) |
 | stock policy | `min_level` (reorder point: ATI `buylev`), `target_level` (ATI `reclev`), `min_buy` (ATI `recbuy`). All optional, and set per stocking location in operations if needed |
@@ -158,8 +158,9 @@ An **approved parameter combination** of a family whose class kind is `part` or 
   silently (Q20). An order-entry interface MAY offer "approve this combination" to a
   user who holds the role.
 * Part numbers are not tied to versions: `1234` is `base(params)` in every version (§6).
-* *(In code)* The next part number is the highest so far plus one. **Open:** two devices
-  numbering at once ([../STATUS.md](../STATUS.md), open items).
+* *(In code)* The next part number is the highest so far plus one. When another device takes
+  the same number first, the write is refused and the next number is tried. **Open:**
+  numbering while offline ([../STATUS.md](../STATUS.md), open items).
 
 ### PartVersion (derived)
 For each part and each released family version: the **explosion hash** (the hash of a
@@ -173,6 +174,19 @@ family, parameter values (which may leave some parameters open, to be filled at 
 description. It is used for quick quoting and for the storefront.
 
 ## 3. Partnames and part numbers
+
+**Partnames are for engineering, part numbers for commerce** (owner, November 2026).
+Families, versions, BOMs, routing, notes, QC and documents use partnames throughout, and a
+family can be defined and released, with parts approved, without issuing any number. A part
+gets a number when something first needs one: an order, a PO, a stock or inventory record, a
+part list for a customer. Other modules reference a part by its ID, so the number is a human
+key for finding and quoting it.
+
+* An operation that needs a part number MUST refuse a part whose number is not yet issued
+  and confirmed by the cohort ([../STATUS.md](../STATUS.md), open items: numbering while
+  offline).
+* Engineering and production documents SHOULD show the partname, and MAY show the number
+  beside it.
 
 | Form | Means |
 |---|---|

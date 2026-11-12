@@ -248,8 +248,10 @@ export interface PartFields {
 }
 
 export interface Part extends PartFields {
+  /** What other modules reference. */
   id: string;
-  pnum: number;
+  /** Issued when the part first needs one (`parts.number`); null until then (product.md §3). */
+  pnum: number | null;
   familyId: string;
   base: string;
   /** Canonical values, in parameter order. */
@@ -319,11 +321,16 @@ export interface CatalogModel {
     get(ref: PartRef): Promise<Result<Part>>;
     list(filter?: { familyId?: string; status?: PartStatus }): Promise<Result<Part[]>>;
     /**
-     * Approve a combination: give it the next part number. Values are checked against the
+     * Approve a combination as a part, without a number. Values are checked against the
      * family's current version and stored canonically. Refused (`PartCombination`) when the
-     * combination already has a number.
+     * combination is already a part.
      */
     create(familyIdOrBase: string, params: string[], fields?: Partial<PartFields>): Promise<Result<Part>>;
+    /**
+     * Give a part the next free part number, or return the one it has. When another device
+     * takes the same number first, it moves on to the next one.
+     */
+    number(ref: PartRef): Promise<Result<Part>>;
     update(id: string, patch: Partial<PartFields>): Promise<Result<Part>>;
     /** Check and canonicalize values against a family's current version, without writing. */
     canonical(familyIdOrBase: string, params: string[]): Promise<Result<string[]>>;

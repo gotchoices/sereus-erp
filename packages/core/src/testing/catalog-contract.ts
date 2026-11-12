@@ -161,33 +161,41 @@ export function describeCatalogContract(name: string, setup: () => Promise<Catal
       expect(value(await m.versions.list('a:chan')).map((v) => v.state)).toEqual(['retired', 'released']);
     });
 
-    it('numbers approved combinations once, in canonical form', async () => {
+    it('approves combinations once, in canonical form, without numbering them', async () => {
       const parts = value(await m.parts.list());
-      expect(parts.map((p) => p.pnum)).toEqual([1, 2, 3, 4]);
-      expect(parts.map((p) => p.partname)).toEqual(['b:pipe(75)', 'b:cap(75)', 'b:netcup', 'a:chan(1200,6,75)']);
+      expect(parts.map((p) => `${p.partname}=${p.pnum}`)).toEqual(['a:chan(1200,6,75)=null', 'b:cap(75)=2', 'b:netcup=3', 'b:pipe(75)=1']);
 
       const p = value(await m.parts.create('a:chan', ['2400.0', '012', ''], { tracking: 'run' }));
-      expect(p).toMatchObject({ pnum: 5, params: ['2400', '12', '75'], partname: 'a:chan(2400,12,75)', status: 'proposed', tracking: 'run' });
+      expect(p).toMatchObject({ pnum: null, params: ['2400', '12', '75'], partname: 'a:chan(2400,12,75)', status: 'proposed', tracking: 'run' });
       failure(await m.parts.create('a:chan', ['2400', '12.00', '75']), 'refused', 'PartCombination');
       failure(await m.parts.create('a:chan', ['2400', '12', '50']), 'invalid');
       failure(await m.parts.create('a:chan', ['200', '12', '75']), 'invalid');
       failure(await m.parts.create('a:chan', ['2400', '12']), 'invalid');
       failure(await m.parts.create('@:tower', ['4', '1200']), 'refused', 'PartKind');
 
-      expect(value(await m.parts.get({ partname: 'a:chan(2400.00, 12, 75).2' })).pnum).toBe(5);
-      expect(value(await m.parts.get({ partname: '5' })).id).toBe(p.id);
-      expect(value(await m.parts.get({ pnum: 5 })).id).toBe(p.id);
+      expect(value(await m.parts.get({ partname: 'a:chan(2400.00, 12, 75).2' })).id).toBe(p.id);
       failure(await m.parts.get({ partname: 'a:chan(3000,12,75)' }), 'not-found');
       failure(await m.parts.get({ partname: 'not a part' }), 'invalid');
       failure(await m.parts.canonical('a:chan', ['1.2e3', '1', '75']), 'invalid');
       expect(value(await m.parts.canonical('a:chan', ['300.50', '+1', '100']))).toEqual(['300.5', '1', '100']);
     });
 
+    it('issues a part number when one is needed, once', async () => {
+      const numbered = value(await m.parts.number({ partname: 'a:chan(2400,12,75)' }));
+      expect(numbered.pnum).toBe(4);
+      expect(value(await m.parts.number({ id: numbered.id })).pnum).toBe(4); // already numbered: unchanged
+      expect(value(await m.parts.number({ partname: 'a:chan(1200,6,75)' })).pnum).toBe(5);
+      expect(value(await m.parts.get({ partname: '4' })).id).toBe(numbered.id);
+      expect(value(await m.parts.get({ pnum: 5 })).partname).toBe('a:chan(1200,6,75)');
+      failure(await m.parts.get({ pnum: 99 }), 'not-found');
+      failure(await m.parts.number({ partname: 'a:chan(3000,12,75)' }), 'not-found');
+    });
+
     it('updates a part but never its identity', async () => {
-      const p = value(await m.parts.update(value(await m.parts.get({ pnum: 5 })).id, { status: 'active', minLevel: 4, comment: 'popular' }));
+      const p = value(await m.parts.update(value(await m.parts.get({ pnum: 4 })).id, { status: 'active', minLevel: 4, comment: 'popular' }));
       expect(p).toMatchObject({ status: 'active', minLevel: 4, comment: 'popular', params: ['2400', '12', '75'] });
       failure(await m.parts.update(p.id, { status: 'bogus' as never }), 'refused', 'PartStatus');
-      expect(value(await m.parts.list({ status: 'active' })).map((x) => x.pnum)).toEqual([4, 5]);
+      expect(value(await m.parts.list({ status: 'active' })).map((x) => x.partname)).toEqual(['a:chan(1200,6,75)', 'a:chan(2400,12,75)']);
     });
 
     it('keeps standard packages, with values left open', async () => {

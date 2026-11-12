@@ -432,8 +432,7 @@ table Note (
 -- ── Parts and packages ─────────────────────────────────────────────────────────
 
 table Part (
-  Id text primary key,                    -- ULID
-  Pnum integer unique,                    -- human part number, never reused
+  Id text primary key,                    -- ULID; what other modules reference
   FamilyId text,
   Params json,                            -- canonical parameter values, in order
   Status text default 'proposed',
@@ -452,7 +451,6 @@ table Part (
   UpdatedAt text default Now, UpdatedBy text default Actor,
   constraint PartFamily foreign key (FamilyId) references Family(Id),
   constraint PartCombination unique (FamilyId, Params),
-  constraint PartPnum check (Pnum >= 1),
   constraint PartParams check (json_type(Params) = 'array'),
   constraint PartStatus check (Status in ('proposed', 'active', 'restricted', 'obsolete')),
   constraint PartTracking check (Tracking in ('none', 'run', 'serial')),
@@ -466,6 +464,24 @@ table Part (
     and UpdatedBy = CreatedBy and UpdatedAt = CreatedAt, false)),
   constraint PartAuditUpdate check on update (coalesce(new.UpdatedBy = context.Actor and new.UpdatedAt = context.Now
     and new.CreatedBy = old.CreatedBy and new.CreatedAt = old.CreatedAt, false))
+) with context (Actor text null, Now text null);
+
+-- Part numbers (product.md §3). Issued separately from approval, when a part first needs
+-- one (an order, a PO, a stock record), so engineering can work in partnames without
+-- consuming numbers. Insert-only, and parts are never deleted, so a number is never reused.
+-- Its own table so that the number, the one value devices contend for, can be judged on its
+-- own when written offline (STATUS.md, open items).
+table PartNumber (
+  Pnum integer primary key,
+  PartId text,
+  CreatedAt text default Now, CreatedBy text default Actor,
+  UpdatedAt text default Now, UpdatedBy text default Actor,
+  constraint PartNumberOnce unique (PartId),
+  constraint PartNumberPart foreign key (PartId) references Part(Id),
+  constraint PartNumberPositive check (Pnum >= 1),
+  constraint PartNumberInsertOnly check on update, delete (false),
+  constraint PartNumberAuditInsert check on insert (coalesce(CreatedBy = context.Actor and CreatedAt = context.Now
+    and UpdatedBy = CreatedBy and UpdatedAt = CreatedAt, false))
 ) with context (Actor text null, Now text null);
 
 -- Derived at release: the part's explosion hash under each released version, and its

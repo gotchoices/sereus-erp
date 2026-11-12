@@ -86,6 +86,8 @@ export async function loadSampleCatalog(m: CatalogModel): Promise<void> {
   must(await m.parts.create('b:cap', ['75']), 'part b:cap(75)');
   must(await m.parts.create('b:netcup', []), 'part b:netcup');
   must(await m.parts.create('a:chan', ['1200', '6', '75'], { status: 'active' }), 'part a:chan(1200,6,75)');
+  // Purchased parts get numbers (they are bought on POs); the channel is numbered when sold.
+  for (const name of ['b:pipe(75)', 'b:cap(75)', 'b:netcup']) must(await m.parts.number({ partname: name }), `number ${name}`);
   must(await m.packages.create('@:tower', 'Four by 1.2 m', ['4', '1200'], 'The usual starter'), 'package');
 }
 
