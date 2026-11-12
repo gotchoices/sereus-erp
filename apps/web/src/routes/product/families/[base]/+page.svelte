@@ -3,14 +3,17 @@
 	import { enhance } from '$app/forms';
 	import type { ActionData, PageData } from './$types';
 	import ConfirmButton from '$lib/components/ConfirmButton.svelte';
-	import { draftHref, familiesHref, familyHref, versionHref } from '$lib/links';
+	import ApprovePart from '$lib/components/ApprovePart.svelte';
+	import { draftHref, familiesHref, familyHref, partHref, versionHref } from '$lib/links';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	const f = $derived(data.family);
 	const keep = $derived(data.keep);
 	const act = (name: string) => `?/${name}${keep ? `&${keep}` : ''}`;
 	const day = (iso: string | null) => (iso ? iso.slice(0, 10) : '');
-	const short = (id: string | null) => (id && id.length > 16 ? `${id.slice(0, 6)}…${id.slice(-4)}` : (id ?? ''));
+	const approvable = $derived(f.currentVer !== null && f.status !== 'obsolete' && data.cls?.kind !== 'package');
+	let approving = $state(false);
+	$effect(() => { if (form && 'approveError' in form && form.approveError) approving = true; });
 </script>
 
 <svelte:head><title>{f.base} · WyattERP</title></svelte:head>
@@ -66,16 +69,21 @@
 </section>
 
 <section>
-	<h2>Parts</h2>
-	{#if data.parts.length === 0}
-		<p class="muted">No parts approved yet.</p>
+	<div class="section-head">
+		<h2>Parts</h2>
+		{#if approvable}<button type="button" onclick={() => (approving = true)}>Approve a configuration</button>{/if}
+	</div>
+	{#if data.cls?.kind === 'package'}
+		<p class="muted">A package family: its configurations are sold and exploded on ordering, never stocked or numbered.</p>
+	{:else if data.parts.length === 0}
+		<p class="muted">No parts approved yet.{f.currentVer === null ? ' Release a version first.' : ''}</p>
 	{:else}
 		<table>
 			<thead><tr><th>Partname</th><th>Part number</th><th>Status</th></tr></thead>
 			<tbody>
 				{#each data.parts as p (p.id)}
 					<tr>
-						<td class="mono">{p.partname}</td>
+						<td class="mono"><a href={partHref(p.id, keep)}>{p.partname}</a></td>
 						<td class="mono">{p.pnum ?? ''}{#if p.pnum === null}<span class="muted">no number yet</span>{/if}</td>
 						<td>{p.status}</td>
 					</tr>
@@ -84,6 +92,17 @@
 		</table>
 	{/if}
 </section>
+
+<ApprovePart
+	families={[]}
+	fixedBase={f.base}
+	action={act('approve')}
+	{keep}
+	bind:open={approving}
+	error={form && 'approveError' in form ? (form.approveError ?? null) : null}
+	existing={form && 'existing' in form ? (form.existing ?? null) : null}
+	values={form && 'values' in form ? (form.values ?? null) : null}
+/>
 
 <section>
 	<h2>Used in</h2>
@@ -131,6 +150,14 @@
 	}
 	section {
 		margin-top: 1.25rem;
+	}
+	.section-head {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+	}
+	.section-head h2 {
+		margin: 0;
 	}
 	h2 {
 		font-size: 1.05rem;

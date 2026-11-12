@@ -11,8 +11,8 @@ Screens of the **web** target, with routes and status. Draft for the owner's rev
 | Family | FamilyDetail | family-detail.md | product-01, 03, 04 | happy, error | generated (slice 2) |
 | Draft editor | DraftEditor | draft-editor.md | product-02, 03 | happy, error | generated (slices 2, 3: release dialog) |
 | Version | VersionView | version-view.md | product-03 | happy | generated (slice 3) |
-| Parts | PartList | part-list.md | product-04 | happy, empty | planned |
-| Part | PartDetail | part-detail.md | product-04 | happy | planned |
+| Parts | PartList | part-list.md | product-04 | happy, empty | generated (slice 4) |
+| Part | PartDetail | part-detail.md | product-04 | happy | generated (slice 4) |
 | Units, classes and operations | ReferenceData | reference-data.md | product-01 (context) | happy, empty | planned |
 | Settings | Settings | settings.md | (none yet) | happy | planned |
 

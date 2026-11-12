@@ -31,6 +31,9 @@ const RULES: Record<string, string> = {
 	BomLineChildParams: 'Child parameters must be a list.',
 	FamilyCurrentIsReleased: 'The release could not be recorded; try again.',
 	VersionReleaseFields: 'A release needs a change summary and the interchangeable choice.',
+	PartStatus: 'Choose a status from the list.',
+	PartTracking: 'Choose a tracking mode from the list.',
+	PartLevels: 'Levels must be zero or more, the minimum buy and shelf life more than zero.',
 };
 
 /** Any model error, in words. */

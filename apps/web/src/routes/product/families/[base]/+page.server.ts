@@ -4,6 +4,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { backendFor } from '$lib/server/data';
 import { errorText } from '$lib/errors';
 import { draftHref, familiesHref } from '$lib/links';
+import { approve } from '$lib/server/approve';
 
 const keepOf = (url: URL) => (url.searchParams.get('variant') ? `variant=${url.searchParams.get('variant')}` : '');
 
@@ -46,6 +47,7 @@ export const actions: Actions = {
 		if (!r.ok) return fail(400, { error: errorText(r.error) });
 		return { done: `Draft v${fam.value.draftVer} discarded.` };
 	},
+	approve: ({ request, url }) => approve(request, url),
 	remove: async ({ params, url }) => {
 		const { catalog } = await backendFor(url);
 		const fam = await catalog.families.get(params.base);
