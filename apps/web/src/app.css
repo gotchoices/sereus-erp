@@ -1,0 +1,35 @@
+/* Workbench defaults (design/specs/web/global/ui.md): system light/dark, dense tables. */
+:root {
+	--bg: #ffffff;
+	--text: #111111;
+	--text-2: #555555;
+	--border: #dddddd;
+	--accent: #1f5fbf;
+	--highlight: #fff6cc;
+	--danger: #b3261e;
+	color-scheme: light dark;
+	font-family: system-ui, -apple-system, sans-serif;
+	font-size: 15px;
+}
+@media (prefers-color-scheme: dark) {
+	:root {
+		--bg: #0a0a0a;
+		--text: #eeeeee;
+		--text-2: #bbbbbb;
+		--border: #333333;
+		--accent: #7aa7ff;
+		--highlight: #3a3310;
+		--danger: #ff8a80;
+	}
+}
+body { margin: 0; background: var(--bg); color: var(--text); }
+a { color: var(--accent); }
+h1 { font-size: 1.5rem; font-weight: 600; margin: 0 0 0.75rem; }
+code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+table { border-collapse: collapse; width: 100%; }
+th, td { text-align: left; padding: 0.3rem 0.6rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+th { font-weight: 600; color: var(--text-2); font-size: 0.85rem; }
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+.error { color: var(--danger); }
+.muted { color: var(--text-2); }

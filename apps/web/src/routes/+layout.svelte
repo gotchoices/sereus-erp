@@ -1,26 +1,55 @@
-<script>
-  import { page } from '$app/stores';
+<script lang="ts">
+	import type { Snippet } from 'svelte';
+	import type { LayoutData } from './$types';
+	import '../app.css';
+
+	let { data, children }: { data: LayoutData; children: Snippet } = $props();
+	const q = (path: string) => (data.keep ? `${path}?${data.keep}` : path);
 </script>
 
-<nav>
-  <a href="/">Home</a>
-</nav>
+<header class="topbar">
+	<a class="brand" href={q('/')}>WyattERP</a>
+	<nav aria-label="Modules">
+		<a href={q('/product')} class="section">Product</a>
+	</nav>
+	<span class="status" title={data.status.peerId ?? ''}>
+		{#if data.status.mode === 'memory'}
+			In-memory catalog ({data.status.variant})
+		{:else if data.status.connected}
+			Connected
+		{:else}
+			This device only
+		{/if}
+	</span>
+</header>
 
 <main>
-  <slot />
+	{@render children()}
 </main>
 
 <style>
-  nav {
-    padding: 1rem;
-    border-bottom: 1px solid #eee;
-  }
-  nav a {
-    margin-right: 1rem;
-  }
-  main {
-    padding: 1rem;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
+	.topbar {
+		display: flex;
+		align-items: center;
+		gap: 1.5rem;
+		padding: 0.5rem 1rem;
+		border-bottom: 1px solid var(--border);
+	}
+	.brand {
+		font-weight: 600;
+		color: var(--text);
+		text-decoration: none;
+	}
+	nav {
+		display: flex;
+		gap: 1rem;
+		flex: 1;
+	}
+	.status {
+		color: var(--text-2);
+		font-size: 0.875rem;
+	}
+	main {
+		padding: 1rem;
+	}
 </style>

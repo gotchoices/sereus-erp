@@ -20,7 +20,7 @@ Phases are defined in `appeus/docs/DESIGN.md` (authoritative).
 
 ## Screen/Component Slicing (this target)
 - [ ] Key screens/components have specs under `design/specs/<target>/screens/` and `design/specs/<target>/components/`
-- [ ] Slices are being generated one at a time with test/commit pauses
+- [ ] Slices are being generated one at a time with test/commit pauses (FamilyList generated from its consolidation, no screen spec; awaiting the owner's review)
 
 ## Scenario / Peer Review (optional)
 - [ ] Scenario docs/images exist under `design/generated/<target>/scenarios/` and `design/generated/<target>/images/`

@@ -1,0 +1,168 @@
+{
+  "outputs": [
+    {
+      "route": "FamilyList",
+      "dependsOn": [
+        "design/generated/web/screens/FamilyList.md",
+        "design/stories/web/product-01-start-a-family.md",
+        "design/specs/project.md",
+        "design/specs/web/navigation.md",
+        "design/specs/web/screens/index.md",
+        "design/specs/web/global/ui.md",
+        "design/specs/domain/product.md",
+        "design/specs/domain/architecture.md"
+      ],
+      "depHashes": {
+        "design/generated/web/screens/FamilyList.md": "ed7bf8ea862d334392d62f63ef9ffdd093161a882b28343a586187b4cc4098d1",
+        "design/stories/web/product-01-start-a-family.md": "921c1e70d071710896aba1e9c2304532f78e3c85be5940bd4db809396d4e11da",
+        "design/specs/project.md": "4ab6f93d58ee1c47ebfdd4bc151da261a7bfdc698bae69df3fb009bec951dab1",
+        "design/specs/web/navigation.md": "54cf41f914d6bf7f624089e9a1654fb826f97d0964334f31d2c45a6a9ae43d27",
+        "design/specs/web/screens/index.md": "c16b1f77fc44a608519818db89f1b8ba9e2c96f9c363c4e9fec3f0b34b2c1152",
+        "design/specs/web/global/ui.md": "7ff180ce8faee9d4b7610315d11f8c1d4163e7cf2df86ec3e882a81e1cd3d058",
+        "design/specs/domain/product.md": "56c414669209791549a7f4fb6c6c196345c0212ac22df2fb0dd7d18511ed6377",
+        "design/specs/domain/architecture.md": "4bc43cf55ec5f397748d61e417f8226941ea9b93044a248f806b116d98abfeda"
+      },
+      "output": "apps/web/src/routes/product/+page.svelte"
+    },
+    {
+      "route": "FamilyDetail",
+      "dependsOn": [
+        "design/specs/project.md",
+        "design/specs/domain/product.md",
+        "design/specs/domain/architecture.md",
+        "design/specs/domain/operations.md",
+        "design/specs/domain/purchasing.md",
+        "design/specs/domain/index.md",
+        "design/specs/domain/bom-engine.md",
+        "design/specs/web/navigation.md",
+        "design/specs/web/screens/index.md",
+        "design/stories/web/product-02-define-the-family.md",
+        "design/stories/web/product-04-approve-configurations.md",
+        "design/stories/web/product-01-start-a-family.md",
+        "design/stories/web/product-03-release-the-first-version.md",
+        "design/generated/web/screens/FamilyDetail.md"
+      ],
+      "depHashes": {}
+    },
+    {
+      "route": "DraftEditor",
+      "dependsOn": [
+        "design/specs/project.md",
+        "design/specs/domain/product.md",
+        "design/specs/domain/architecture.md",
+        "design/specs/domain/operations.md",
+        "design/specs/domain/purchasing.md",
+        "design/specs/domain/index.md",
+        "design/specs/domain/bom-engine.md",
+        "design/specs/web/navigation.md",
+        "design/specs/web/screens/index.md",
+        "design/stories/web/product-02-define-the-family.md",
+        "design/stories/web/product-04-approve-configurations.md",
+        "design/stories/web/product-01-start-a-family.md",
+        "design/stories/web/product-03-release-the-first-version.md",
+        "design/generated/web/screens/DraftEditor.md"
+      ],
+      "depHashes": {}
+    },
+    {
+      "route": "VersionView",
+      "dependsOn": [
+        "design/specs/project.md",
+        "design/specs/domain/product.md",
+        "design/specs/domain/architecture.md",
+        "design/specs/domain/operations.md",
+        "design/specs/domain/purchasing.md",
+        "design/specs/domain/index.md",
+        "design/specs/domain/bom-engine.md",
+        "design/specs/web/navigation.md",
+        "design/specs/web/screens/index.md",
+        "design/stories/web/product-02-define-the-family.md",
+        "design/stories/web/product-04-approve-configurations.md",
+        "design/stories/web/product-01-start-a-family.md",
+        "design/stories/web/product-03-release-the-first-version.md",
+        "design/generated/web/screens/VersionView.md"
+      ],
+      "depHashes": {}
+    },
+    {
+      "route": "PartList",
+      "dependsOn": [
+        "design/specs/project.md",
+        "design/specs/domain/product.md",
+        "design/specs/domain/architecture.md",
+        "design/specs/domain/operations.md",
+        "design/specs/domain/purchasing.md",
+        "design/specs/domain/index.md",
+        "design/specs/domain/bom-engine.md",
+        "design/specs/web/navigation.md",
+        "design/specs/web/screens/index.md",
+        "design/stories/web/product-02-define-the-family.md",
+        "design/stories/web/product-04-approve-configurations.md",
+        "design/stories/web/product-01-start-a-family.md",
+        "design/stories/web/product-03-release-the-first-version.md",
+        "design/generated/web/screens/PartList.md"
+      ],
+      "depHashes": {}
+    },
+    {
+      "route": "PartDetail",
+      "dependsOn": [
+        "design/specs/project.md",
+        "design/specs/domain/product.md",
+        "design/specs/domain/architecture.md",
+        "design/specs/domain/operations.md",
+        "design/specs/domain/purchasing.md",
+        "design/specs/domain/index.md",
+        "design/specs/domain/bom-engine.md",
+        "design/specs/web/navigation.md",
+        "design/specs/web/screens/index.md",
+        "design/stories/web/product-02-define-the-family.md",
+        "design/stories/web/product-04-approve-configurations.md",
+        "design/stories/web/product-01-start-a-family.md",
+        "design/stories/web/product-03-release-the-first-version.md",
+        "design/generated/web/screens/PartDetail.md"
+      ],
+      "depHashes": {}
+    },
+    {
+      "route": "ReferenceData",
+      "dependsOn": [
+        "design/specs/project.md",
+        "design/specs/domain/product.md",
+        "design/specs/domain/architecture.md",
+        "design/specs/domain/operations.md",
+        "design/specs/domain/purchasing.md",
+        "design/specs/domain/index.md",
+        "design/specs/domain/bom-engine.md",
+        "design/specs/web/navigation.md",
+        "design/specs/web/screens/index.md",
+        "design/stories/web/product-02-define-the-family.md",
+        "design/stories/web/product-04-approve-configurations.md",
+        "design/stories/web/product-01-start-a-family.md",
+        "design/stories/web/product-03-release-the-first-version.md",
+        "design/generated/web/screens/ReferenceData.md"
+      ],
+      "depHashes": {}
+    },
+    {
+      "route": "Settings",
+      "dependsOn": [
+        "design/specs/project.md",
+        "design/specs/domain/product.md",
+        "design/specs/domain/architecture.md",
+        "design/specs/domain/operations.md",
+        "design/specs/domain/purchasing.md",
+        "design/specs/domain/index.md",
+        "design/specs/domain/bom-engine.md",
+        "design/specs/web/navigation.md",
+        "design/specs/web/screens/index.md",
+        "design/stories/web/product-02-define-the-family.md",
+        "design/stories/web/product-04-approve-configurations.md",
+        "design/stories/web/product-01-start-a-family.md",
+        "design/stories/web/product-03-release-the-first-version.md",
+        "design/generated/web/screens/Settings.md"
+      ],
+      "depHashes": {}
+    }
+  ]
+}

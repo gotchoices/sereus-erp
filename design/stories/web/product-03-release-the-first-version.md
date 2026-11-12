@@ -18,3 +18,7 @@ Context: Continues product-02.
 - [ ] A released version cannot be edited; the app offers "start a new draft" instead.
 - [ ] Notes and QC checks of a released version can still be corrected, as a recorded minor revision.
 - [ ] (Later, with the BOM engine) release also explodes sample configurations and shows any failures.
+
+## Questions (for the owner; the working default is used until answered)
+- Q1. Must the person releasing differ from the last editor (domain/product.md §9, open)? *Default: no check; one person does both today.*
+- Q2. Before releasing version 2 or later, should the app show what changed from the current version (lines added, removed, changed)? *Default: yes, a simple side-by-side list of changes, when that slice comes.*

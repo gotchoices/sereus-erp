@@ -19,3 +19,9 @@ Context: Continues product-01. The family has a draft. Component families (pipe,
 - [ ] Parameters, lines, steps and notes can be added, edited, reordered and removed while the version is a draft.
 - [ ] A refused save says which rule refused it, in words.
 - [ ] Nothing in a draft is visible as "current" to other modules until it is released.
+
+## Questions (for the owner; the working default is used until answered)
+- Q1. Until the BOM engine exists, expressions (`L / 1000`) can't be evaluated. Should the app check them at all when saving? *Default: no check; they are stored as written, and release checks only what it can (component exists, parameter count).*
+- Q2. Should the engineer be able to try a configuration (enter `1200,6,75` and see the exploded BOM) while editing? *Default: yes, once the engine exists; not in the first slices.*
+- Q3. Documents (drawings, datasheets): does the engineer attach files, or record where a file lives (a path or link)? *Default: a name, a kind and a link; no upload yet.*
+- Q4. Reordering parameters changes every partname of the family. Allowed freely in a draft? *Default: allowed before the first release, with a warning after it.*

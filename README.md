@@ -65,6 +65,18 @@ data/            local-only ATI data extract (git-ignored)
 
 Start with [docs/README.md](docs/README.md).
 
+## Running the web app
+
+```bash
+yarn install && yarn build            # the packages the app uses
+cd apps/web && yarn dev               # http://localhost:5173, on a real Sereus node
+```
+
+The node keeps its keys and data in `apps/web/.wyatt/` (git-ignored). On first start it
+founds a catalog strand and fills it with a small sample hydroponics catalog. Delete that
+folder to start over. `yarn dev:memory` runs on an in-memory catalog instead, with
+`?variant=happy|empty|error` for review states.
+
 ## Built on
 
 * [Sereus](../sereus): strands, cadres and the peer-to-peer fabric

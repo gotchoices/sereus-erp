@@ -1,0 +1,5 @@
+node_modules
+/build
+/.svelte-kit
+# This machine's Sereus node: keys, blocks and journals (WYATT_HOME default).
+/.wyatt

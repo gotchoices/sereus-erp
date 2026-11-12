@@ -3,18 +3,21 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "vite dev",
+    "dev": "WYATT_SEED=${WYATT_SEED:-sample} vite dev",
     "build": "vite build",
     "preview": "vite preview",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-    "test": "echo \"no web tests yet\""
+    "test": "echo \"no web tests yet\"",
+    "dev:memory": "WYATT_DATA=memory vite dev",
+    "start": "node build"
   },
   "devDependencies": {
-    "@sveltejs/adapter-auto": "^3.0.0",
+    "@sveltejs/adapter-node": "^5.0.0",
     "@sveltejs/kit": "^2.0.0",
     "@sveltejs/vite-plugin-svelte": "^5.0.0",
+    "@types/node": "^24.0.0",
     "svelte": "^5.0.0",
     "svelte-check": "^4.0.0",
     "typescript": "^5.0.0",
@@ -22,6 +25,11 @@
   },
   "type": "module",
   "dependencies": {
+    "@libp2p/circuit-relay-v2": "4.2.14",
+    "@libp2p/websockets": "10.1.22",
+    "@optimystic/db-p2p-storage-fs": "1.25.0",
+    "@quereus/quereus": "4.25.0",
+    "@serfab/cadre-core": "1.21.0",
     "@wyatt/core": "workspace:^",
     "@wyatt/domain": "workspace:^"
   }

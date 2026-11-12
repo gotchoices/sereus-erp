@@ -19,3 +19,8 @@ Context: The family has a released version. Partnames are for engineering; part 
 - [ ] Packages (`@:` families) cannot be approved as parts.
 - [ ] `a:chan(1200.0, 06, 75)` and `a:chan(1200,6,75)` are recognized as the same part.
 - [ ] A part number is never shown as final before it is confirmed, and never changes once final.
+
+## Questions (for the owner; the working default is used until answered)
+- Q1. Should the engineer be able to approve several configurations at once (for example every length from 600 to 2400 by 300, in both diameters)? *Default: one at a time in the first slice.*
+- Q2. Should "issue a number" be offered on the part itself, or only when an order or PO first needs it? *Default: offered on the part, and later automatic from orders and POs.*
+- Q3. Is a newly approved part `proposed` until someone marks it `active`, or active at once? *Default: proposed, as the domain says; the engineer can activate it.*
