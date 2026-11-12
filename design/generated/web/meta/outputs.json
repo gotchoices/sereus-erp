@@ -17,7 +17,7 @@
         "design/stories/web/product-01-start-a-family.md": "921c1e70d071710896aba1e9c2304532f78e3c85be5940bd4db809396d4e11da",
         "design/specs/project.md": "4ab6f93d58ee1c47ebfdd4bc151da261a7bfdc698bae69df3fb009bec951dab1",
         "design/specs/web/navigation.md": "54cf41f914d6bf7f624089e9a1654fb826f97d0964334f31d2c45a6a9ae43d27",
-        "design/specs/web/screens/index.md": "6aabc26f1c11f32fc5fa2ff49a8316d85b54fdf2a47efb3da63981d923a2593c",
+        "design/specs/web/screens/index.md": "9bfa7daa7e40a8153fb61dc576b36b26a8c94af2a7be14f4531fc8701f56a9ab",
         "design/specs/web/global/ui.md": "7ff180ce8faee9d4b7610315d11f8c1d4163e7cf2df86ec3e882a81e1cd3d058",
         "design/specs/domain/product.md": "56c414669209791549a7f4fb6c6c196345c0212ac22df2fb0dd7d18511ed6377",
         "design/specs/domain/architecture.md": "4bc43cf55ec5f397748d61e417f8226941ea9b93044a248f806b116d98abfeda"
@@ -44,7 +44,7 @@
         "design/stories/web/product-04-approve-configurations.md": "dbd57718fec0820027ae26073f1a65a547486b952dc3ba40c762e837c4477cdc",
         "design/specs/project.md": "4ab6f93d58ee1c47ebfdd4bc151da261a7bfdc698bae69df3fb009bec951dab1",
         "design/specs/web/navigation.md": "54cf41f914d6bf7f624089e9a1654fb826f97d0964334f31d2c45a6a9ae43d27",
-        "design/specs/web/screens/index.md": "6aabc26f1c11f32fc5fa2ff49a8316d85b54fdf2a47efb3da63981d923a2593c",
+        "design/specs/web/screens/index.md": "9bfa7daa7e40a8153fb61dc576b36b26a8c94af2a7be14f4531fc8701f56a9ab",
         "design/specs/domain/product.md": "56c414669209791549a7f4fb6c6c196345c0212ac22df2fb0dd7d18511ed6377",
         "design/generated/web/screens/PartList.md": "00ed46f2a77a2ef2e53c3873e371eb3d39bbf782ec6b654e15cd939582e24c40"
       },
@@ -67,7 +67,7 @@
         "design/stories/web/product-02-define-the-family.md": "a69fc246c2f62dee9ab14cdb763b88c81ae969ad30c6534e90c9113408b3395a",
         "design/specs/project.md": "4ab6f93d58ee1c47ebfdd4bc151da261a7bfdc698bae69df3fb009bec951dab1",
         "design/specs/web/navigation.md": "54cf41f914d6bf7f624089e9a1654fb826f97d0964334f31d2c45a6a9ae43d27",
-        "design/specs/web/screens/index.md": "6aabc26f1c11f32fc5fa2ff49a8316d85b54fdf2a47efb3da63981d923a2593c",
+        "design/specs/web/screens/index.md": "9bfa7daa7e40a8153fb61dc576b36b26a8c94af2a7be14f4531fc8701f56a9ab",
         "design/specs/domain/product.md": "56c414669209791549a7f4fb6c6c196345c0212ac22df2fb0dd7d18511ed6377",
         "design/specs/domain/catalog.qsql": "01af511e4851e6f4fe675807dc16cfb5f7bef32f55190ecc3fae9ba237dc0e59",
         "design/generated/web/screens/VersionView.md": "7c96890e8a6694d435d9e2e396b1b26c7fd4a8bc94b2d808a2fe787ddbfce72b"
@@ -91,7 +91,7 @@
         "design/stories/web/product-02-define-the-family.md": "a69fc246c2f62dee9ab14cdb763b88c81ae969ad30c6534e90c9113408b3395a",
         "design/specs/project.md": "4ab6f93d58ee1c47ebfdd4bc151da261a7bfdc698bae69df3fb009bec951dab1",
         "design/specs/web/navigation.md": "54cf41f914d6bf7f624089e9a1654fb826f97d0964334f31d2c45a6a9ae43d27",
-        "design/specs/web/screens/index.md": "6aabc26f1c11f32fc5fa2ff49a8316d85b54fdf2a47efb3da63981d923a2593c",
+        "design/specs/web/screens/index.md": "9bfa7daa7e40a8153fb61dc576b36b26a8c94af2a7be14f4531fc8701f56a9ab",
         "design/specs/domain/product.md": "56c414669209791549a7f4fb6c6c196345c0212ac22df2fb0dd7d18511ed6377"
       },
       "output": "apps/web/src/routes/product/families/[base]/v/[ver]/+page.svelte"
@@ -111,7 +111,7 @@
         "design/stories/web/product-04-approve-configurations.md": "dbd57718fec0820027ae26073f1a65a547486b952dc3ba40c762e837c4477cdc",
         "design/specs/project.md": "4ab6f93d58ee1c47ebfdd4bc151da261a7bfdc698bae69df3fb009bec951dab1",
         "design/specs/web/navigation.md": "54cf41f914d6bf7f624089e9a1654fb826f97d0964334f31d2c45a6a9ae43d27",
-        "design/specs/web/screens/index.md": "6aabc26f1c11f32fc5fa2ff49a8316d85b54fdf2a47efb3da63981d923a2593c",
+        "design/specs/web/screens/index.md": "9bfa7daa7e40a8153fb61dc576b36b26a8c94af2a7be14f4531fc8701f56a9ab",
         "design/specs/domain/product.md": "56c414669209791549a7f4fb6c6c196345c0212ac22df2fb0dd7d18511ed6377"
       },
       "output": "apps/web/src/routes/product/parts/+page.svelte"
@@ -132,7 +132,7 @@
         "design/stories/web/product-04-approve-configurations.md": "dbd57718fec0820027ae26073f1a65a547486b952dc3ba40c762e837c4477cdc",
         "design/specs/project.md": "4ab6f93d58ee1c47ebfdd4bc151da261a7bfdc698bae69df3fb009bec951dab1",
         "design/specs/web/navigation.md": "54cf41f914d6bf7f624089e9a1654fb826f97d0964334f31d2c45a6a9ae43d27",
-        "design/specs/web/screens/index.md": "6aabc26f1c11f32fc5fa2ff49a8316d85b54fdf2a47efb3da63981d923a2593c",
+        "design/specs/web/screens/index.md": "9bfa7daa7e40a8153fb61dc576b36b26a8c94af2a7be14f4531fc8701f56a9ab",
         "design/specs/domain/product.md": "56c414669209791549a7f4fb6c6c196345c0212ac22df2fb0dd7d18511ed6377",
         "design/specs/domain/architecture.md": "4bc43cf55ec5f397748d61e417f8226941ea9b93044a248f806b116d98abfeda"
       },
@@ -141,22 +141,26 @@
     {
       "route": "ReferenceData",
       "dependsOn": [
+        "design/generated/web/screens/ReferenceData.md",
+        "design/stories/web/product-05-reference-data.md",
+        "design/stories/web/product-01-start-a-family.md",
         "design/specs/project.md",
-        "design/specs/domain/product.md",
-        "design/specs/domain/architecture.md",
-        "design/specs/domain/operations.md",
-        "design/specs/domain/purchasing.md",
-        "design/specs/domain/index.md",
-        "design/specs/domain/bom-engine.md",
         "design/specs/web/navigation.md",
         "design/specs/web/screens/index.md",
-        "design/stories/web/product-02-define-the-family.md",
-        "design/stories/web/product-04-approve-configurations.md",
-        "design/stories/web/product-01-start-a-family.md",
-        "design/stories/web/product-03-release-the-first-version.md",
-        "design/generated/web/screens/ReferenceData.md"
+        "design/specs/domain/product.md",
+        "design/specs/domain/architecture.md"
       ],
-      "depHashes": {}
+      "depHashes": {
+        "design/generated/web/screens/ReferenceData.md": "bb03da3cccda5a24f845dc067538f284ef811ce99bd9ce0a983a5283aa8a68eb",
+        "design/stories/web/product-05-reference-data.md": "b98397a5ac5e46a35b61a9fbe40afa38f3048ddf91a2f4163308a009f0bd4797",
+        "design/stories/web/product-01-start-a-family.md": "921c1e70d071710896aba1e9c2304532f78e3c85be5940bd4db809396d4e11da",
+        "design/specs/project.md": "4ab6f93d58ee1c47ebfdd4bc151da261a7bfdc698bae69df3fb009bec951dab1",
+        "design/specs/web/navigation.md": "54cf41f914d6bf7f624089e9a1654fb826f97d0964334f31d2c45a6a9ae43d27",
+        "design/specs/web/screens/index.md": "9bfa7daa7e40a8153fb61dc576b36b26a8c94af2a7be14f4531fc8701f56a9ab",
+        "design/specs/domain/product.md": "56c414669209791549a7f4fb6c6c196345c0212ac22df2fb0dd7d18511ed6377",
+        "design/specs/domain/architecture.md": "4bc43cf55ec5f397748d61e417f8226941ea9b93044a248f806b116d98abfeda"
+      },
+      "output": "apps/web/src/routes/product/reference/+page.svelte"
     },
     {
       "route": "Settings",

@@ -11,3 +11,4 @@ export const versionHref = (base: string, ver: number, keep = '', minor?: number
 export const partsHref = (keep = '') => withKeep('/product/parts', keep);
 /** A part by ID (its permanent link); a part number or partname also resolves. */
 export const partHref = (ref: string | number, keep = '') => withKeep(`/product/parts/${encodeURIComponent(String(ref))}`, keep);
+export const referenceHref = (keep = '') => withKeep('/product/reference', keep);

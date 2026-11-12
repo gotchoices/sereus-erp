@@ -3,15 +3,17 @@
 	import type { Snippet } from 'svelte';
 	import { page } from '$app/state';
 	import type { LayoutData } from './$types';
-	import { familiesHref, partsHref } from '$lib/links';
+	import { familiesHref, partsHref, referenceHref } from '$lib/links';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 	const onParts = $derived(page.url.pathname.startsWith('/product/parts'));
+	const onReference = $derived(page.url.pathname.startsWith('/product/reference'));
 </script>
 
 <nav class="tabs" aria-label="Product">
-	<a href={familiesHref(data.keep)} aria-current={!onParts ? 'page' : undefined}>Families</a>
+	<a href={familiesHref(data.keep)} aria-current={!onParts && !onReference ? 'page' : undefined}>Families</a>
 	<a href={partsHref(data.keep)} aria-current={onParts ? 'page' : undefined}>Parts</a>
+	<a href={referenceHref(data.keep)} aria-current={onReference ? 'page' : undefined}>Units, classes and operations</a>
 </nav>
 {@render children()}
 

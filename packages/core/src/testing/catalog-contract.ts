@@ -50,6 +50,21 @@ export function describeCatalogContract(name: string, setup: () => Promise<Catal
       failure(await m.units.put({ code: 'bad code', name: 'x', dimension: 'count', scale: 0, factorNum: null, factorDen: null }), 'refused', 'UnitCodeFormat');
     });
 
+    it('counts what uses each reference entry, and freezes what in-use data depends on', async () => {
+      const u = value(await m.usage());
+      expect(u.classes).toMatchObject({ a: 1, b: 3, '@': 1 });
+      expect(u.units.ea).toBeGreaterThan(0);
+      expect(u.operations.cut).toBe(1);
+      // A unit in use keeps its decimal places; its name may change.
+      failure(await m.units.put({ code: 'mm', name: 'millimeter', dimension: 'length', scale: 1, factorNum: 1, factorDen: 1000 }), 'refused', 'UnitScaleFixed');
+      expect(value(await m.units.put({ code: 'mm', name: 'millimetre', dimension: 'length', scale: 0, factorNum: 1, factorDen: 1000 })).name).toBe('millimetre');
+      // An unused unit may change freely.
+      value(await m.units.put({ code: 'l', name: 'liter', dimension: 'volume', scale: 0, factorNum: null, factorDen: null }));
+      expect(value(await m.units.put({ code: 'l', name: 'liter', dimension: 'volume', scale: 3, factorNum: null, factorDen: null })).scale).toBe(3);
+      // A class with families keeps its kind.
+      failure(await m.classes.put({ prefix: 'b', name: 'Purchased parts', kind: 'package', storageNotes: null, defaultLocationType: null }), 'refused', 'ClassKindFixed');
+    });
+
     it('lists and finds families', async () => {
       expect(value(await m.families.list()).map((f) => f.base)).toEqual(['@:tower', 'a:chan', 'b:cap', 'b:netcup', 'b:pipe']);
       expect(value(await m.families.list({ classPrefix: 'b' })).length).toBe(3);

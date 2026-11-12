@@ -43,6 +43,16 @@ export interface Operation {
   description: string;
 }
 
+/** Counts of the records that name each reference entry, by its key. */
+export interface ReferenceUsage {
+  /** Families counted in the unit, plus parameters measured in it. */
+  units: Record<string, number>;
+  /** Families in the class. */
+  classes: Record<string, number>;
+  /** Routing steps using the operation, in any version. */
+  operations: Record<string, number>;
+}
+
 // ── Families and versions ──────────────────────────────────────────────────────
 
 export type FamilyStatus = 'active' | 'restricted' | 'obsolete';
@@ -287,6 +297,8 @@ export interface CatalogModel {
     list(): Promise<Result<Operation[]>>;
     put(op: Operation): Promise<Result<Operation>>;
   };
+  /** How many records name each unit, class and operation. */
+  usage(): Promise<Result<ReferenceUsage>>;
 
   families: {
     list(filter?: FamilyFilter): Promise<Result<Family[]>>;

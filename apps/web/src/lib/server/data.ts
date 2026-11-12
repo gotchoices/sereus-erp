@@ -10,7 +10,7 @@
  * show what the real system could (design/specs/project.md, Data Strategy).
  */
 import { fail, type Result } from '@wyatt/core';
-import { loadSampleCatalog, openMemoryCatalog, type CatalogModel } from '@wyatt/core/catalog';
+import { loadSampleCatalog, openMemoryCatalog, openStrandCatalog, type CatalogModel } from '@wyatt/core/catalog';
 import { runningNode } from './node';
 
 export type DataMode = 'strand' | 'memory';
@@ -40,7 +40,9 @@ export async function backendFor(url: URL): Promise<Backend> {
 	}
 	const running = await runningNode();
 	return {
-		catalog: running.catalog,
+		// Built per request from the current @wyatt/core, over the long-lived node: a rebuilt
+		// model takes effect at once in development (vite.config.ts).
+		catalog: openStrandCatalog(running.node, running.catalogStrandId),
 		status: {
 			mode: 'strand',
 			variant: null,

@@ -56,7 +56,7 @@
 			{:else if cls}
 				Class <code>{cls.prefix}</code>: {cls.name}{cls.kind === 'package' ? ' (packages: sold, never stocked)' : ''}
 			{:else}
-				<span class="error">No class <code>{prefix}</code></span>
+				<span class="error">No class <code>{prefix}</code>. <a href="/product/reference">Add it</a></span>
 			{/if}
 		</p>
 

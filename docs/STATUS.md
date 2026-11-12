@@ -130,8 +130,14 @@ needs no cross-strand joins, postings or Bonum.
      Exercised in the owner's Chrome: approve from a partname (stored canonically), issue a
      number, edit status and stock policy, a duplicate refused with a link to the existing
      part. Number confirmation state waits for the offline-numbering work (open items).
-   * ⬜ Next slices: ReferenceData (units, classes, operations), then Settings; then the ATI
-     import into a local-only strand as browse and volume data.
+   * 🔄 Slice 5: ReferenceData (story product-05, written for it): units, classes and
+     operations with usage counts. Core gained `usage()` and two in-use rules: a unit's
+     decimal places (`UnitScaleFixed`) and a class's kind (`ClassKindFixed`) are fixed once
+     used. Awaiting a check in the owner's browser.
+   * Dev loop: `@wyatt/*` packages are bundled by Vite (`apps/web/vite.config.ts`) and the
+     catalog model is built per request over the long-lived node, so `yarn build` of a
+     package reaches a running `yarn dev` without a restart.
+   * ⬜ Next: Settings; then the ATI import into a local-only strand as browse and volume data.
    * ⬜ Owner's answers to the questions in the stories (working defaults used meanwhile).
    * ⬜ Test data: import the ATI 2014 catalog into a local-only strand once the first screens
      work. Never into a strand shared with others, and never in committed screenshots.

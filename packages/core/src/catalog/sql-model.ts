@@ -15,7 +15,7 @@ import { rows, serialized, transaction, type Row } from '../sql.js';
 import type {
   BomLineDef, CatalogModel, Class, DocumentDef, DraftDefinition, Family, FamilyFilter, FamilyPatch,
   MinorChange, NewFamily, NoteDef, Operation, ParameterDef, Part, PartFields, PartRef, ProcessDef,
-  Release, StandardPackage, Unit, Version, WhereUsed,
+  ReferenceUsage, Release, StandardPackage, Unit, Version, WhereUsed,
 } from './model.js';
 
 export interface CatalogModelOptions {
@@ -250,13 +250,33 @@ export function createCatalogModel(db: Database, opts: CatalogModelOptions): Cat
 
   // ── Reference data ──
 
-  function reference<T>(table: string, keyCol: string, toRow: (x: T) => Row, fromRow: (r: Row) => T, keyOf: (x: T) => string, order: string) {
+  /** How many records name each unit, class and operation (product-05). */
+  async function usage(): Promise<ReferenceUsage> {
+    const count = async (sql: string) => Object.fromEntries((await rows(db, sql)).map((r) => [String(r.K), Number(r.N)]));
+    const [famUnits, paramUnits, classes, operations] = await Promise.all([
+      count('select UnitCode as K, count(*) as N from App.Family group by UnitCode'),
+      count('select UnitCode as K, count(*) as N from App.Parameter where UnitCode is not null group by UnitCode'),
+      count('select ClassPrefix as K, count(*) as N from App.Family group by ClassPrefix'),
+      count('select OperationCode as K, count(*) as N from App.Process group by OperationCode'),
+    ]);
+    const units: Record<string, number> = { ...famUnits };
+    for (const [k, n] of Object.entries(paramUnits)) units[k] = (units[k] ?? 0) + n;
+    return { units, classes, operations };
+  }
+
+  /**
+   * Insert or update reference data by key. `guard` sees the stored row and the new one and
+   * may refuse the change (rules the schema cannot see, such as "in use").
+   */
+  function reference<T>(table: string, keyCol: string, toRow: (x: T) => Row, fromRow: (r: Row) => T, keyOf: (x: T) => string, order: string,
+    guard?: (stored: Row, next: Row) => Promise<void>) {
     return {
       list: () => op(async () => (await rows(db, `select * from App.${table} order by ${order}`)).map(fromRow)),
       put: (x: T) => op(async (w) => {
         const key = keyOf(x);
-        const [exists] = await rows(db, `select 1 as X from App.${table} where ${keyCol} = ?`, [key]);
+        const [exists] = await rows(db, `select * from App.${table} where ${keyCol} = ?`, [key]);
         const r = toRow(x);
+        if (exists && guard) await guard(exists, r);
         if (exists) {
           const { [keyCol]: _, ...rest } = r;
           await w.update(table, rest, { [keyCol]: key });
@@ -273,15 +293,30 @@ export function createCatalogModel(db: Database, opts: CatalogModelOptions): Cat
     units: reference<Unit>('Unit', 'Code',
       (u) => ({ Code: u.code, Name: u.name, Dimension: u.dimension, Scale: u.scale, FactorNum: u.factorNum, FactorDen: u.factorDen }),
       (r) => ({ code: String(r.Code), name: String(r.Name), dimension: r.Dimension as Unit['dimension'], scale: Number(r.Scale), factorNum: num(r.FactorNum), factorDen: num(r.FactorDen) }),
-      (u) => u.code, 'Code'),
+      (u) => u.code, 'Code',
+      async (stored, next) => {
+        // Quantities are stored as integers of the unit's scale (architecture.md §7): a new scale
+        // would change what every stored quantity means.
+        if (Number(stored.Scale) !== Number(next.Scale) && ((await usage()).units[String(stored.Code)] ?? 0) > 0) {
+          throw refused('UnitScaleFixed', `${stored.Code} is in use; its decimal places cannot change`);
+        }
+      }),
     classes: reference<Class>('Class', 'Prefix',
       (c) => ({ Prefix: c.prefix, Name: c.name, Kind: c.kind, StorageNotes: c.storageNotes, DefaultLocationType: c.defaultLocationType }),
       (r) => ({ prefix: String(r.Prefix), name: String(r.Name), kind: r.Kind as Class['kind'], storageNotes: str(r.StorageNotes), defaultLocationType: str(r.DefaultLocationType) }),
-      (c) => c.prefix, 'Prefix'),
+      (c) => c.prefix, 'Prefix',
+      async (stored, next) => {
+        // Whether a family's combinations are parts, packages or one-offs is decided by its class.
+        if (stored.Kind !== next.Kind && ((await usage()).classes[String(stored.Prefix)] ?? 0) > 0) {
+          throw refused('ClassKindFixed', `class ${stored.Prefix} has families; its kind cannot change`);
+        }
+      }),
     operations: reference<Operation>('Operation', 'Code',
       (o) => ({ Code: o.code, Description: o.description }),
       (r) => ({ code: String(r.Code), description: String(r.Description) }),
       (o) => o.code, 'Code'),
+
+    usage: () => op(() => usage()),
 
     families: {
       list: (filter: FamilyFilter = {}) => op(async () => {

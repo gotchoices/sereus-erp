@@ -3,7 +3,7 @@
 	import type { ActionData, PageData } from './$types';
 	import type { Family } from '@wyatt/core/catalog';
 	import NewFamily from '$lib/components/NewFamily.svelte';
-	import { familyHref } from '$lib/links';
+	import { familyHref, referenceHref } from '$lib/links';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -63,7 +63,7 @@
 		<div class="empty">
 			<p>No families yet.</p>
 			{#if data.classes.length === 0 || data.units.length === 0}
-				<p class="muted">Families need a class and a unit. Set up classes and units first (Units, classes and operations, a later screen).</p>
+				<p class="muted">Families need a class and a unit. Set them up first under <a href={referenceHref(keep)}>Units, classes and operations</a>.</p>
 			{:else}
 				<button onclick={() => (creating = true)}>Start the first family</button>
 			{/if}
