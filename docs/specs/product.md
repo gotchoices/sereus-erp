@@ -2,7 +2,8 @@
 
 Owned by the **catalog** module ([architecture.md](architecture.md) §2). The executable
 schema is [catalog.qsql](catalog.qsql). It enforces the invariants below except where it says
-otherwise, and its tests are in `packages/core/src/catalog/`.
+otherwise. The operations are `CatalogModel` in `packages/core/src/catalog/model.ts`, which
+also checks the rules marked *(in code)*. Tests are in `packages/core/src/catalog/`.
 
 ## 1. Purpose
 
@@ -96,6 +97,11 @@ and optional `min`/`max` for numbers.
 
 `b:nut(0.3750,16)` and `b:nut(.375,16)` are therefore the same partname.
 
+*(In code)* Values are checked against the family's **current** version: the right count,
+numbers within `min`/`max`, enum values among the allowed ones. An empty value takes the
+parameter's default. A `str` value may not contain parentheses or commas, which would break
+the partname. A family with no released version has no parts.
+
 ### BomLine
 Per version, ordered by `pos`:
 
@@ -152,6 +158,8 @@ An **approved parameter combination** of a family whose class kind is `part` or 
   silently (Q20). An order-entry interface MAY offer "approve this combination" to a
   user who holds the role.
 * Part numbers are not tied to versions: `1234` is `base(params)` in every version (§6).
+* *(In code)* The next part number is the highest so far plus one. **Open:** two devices
+  numbering at once ([../STATUS.md](../STATUS.md), open items).
 
 ### PartVersion (derived)
 For each part and each released family version: the **explosion hash** (the hash of a
@@ -197,7 +205,13 @@ Parsing and formatting partnames are shared library functions ([architecture.md]
    becomes `released` and is now immutable. The previous version becomes `superseded`.
    `current_version` moves forward. PartVersion rows are computed.
 5. **Retire** (rare). A retired version can no longer be chosen for new demand. Existing
-   records that reference it stay valid.
+   records that reference it stay valid. *(In code)* The current version can't be retired:
+   release a new one, or mark the family `obsolete`.
+
+Version 1 has no predecessor, so its `interchangeable` is recorded as true. From version 2 on
+it must be given. A draft is saved as a whole: the interface sends the full definition and it
+replaces the previous one. Discarding a family's only draft leaves the family with no
+versions; a family never released can be deleted.
 
 ATI: pass 2 edited families in place, and `revision`/`minrev` were labels with no history.
 Pass 3 introduced the draft/current pair. This spec keeps that model.
@@ -261,6 +275,8 @@ Options are expressed in the BOM, not as a variant matrix:
 
 * Every line's `component` refers to an existing family, and the child parameter list has the
   child family's parameter count (checked against the version that would be used).
+  *(In code, at release)* A child with no released version and no pinned version refuses
+  the release.
 * Parameter names are unique within a version and do not collide with reserved names
   ([bom-engine.md](bom-engine.md) §6).
 * No family can reach itself through its lines with the same parameters. The engine detects

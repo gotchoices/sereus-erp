@@ -208,6 +208,12 @@ over them.
   builds one; apps do that. Any app that works in a module's strand goes through this package,
   so the strand's rules live in one place (see §5 and [../STATUS.md](../STATUS.md) on apps
   sharing strands).
+  * Each module has its own entry point (`@wyatt/core/catalog`), so an app loads only the
+    modules it uses. Results and errors are shared: an operation returns a `Result`, and a
+    refused write names the schema constraint or code rule that refused it.
+  * A module's model is written once, against the Quereus `Database` holding its schema. It
+    runs on the strand, or on a local in-memory database built from the same schema for UI
+    work and tests, so both enforce the same rules. One contract suite runs against both.
 
 ## 12. Performance notes
 

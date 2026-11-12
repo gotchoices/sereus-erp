@@ -3,8 +3,8 @@
 **Legend:** ⬜ Todo | 🔄 In progress | ✅ Done | ❓ Needs discussion | 🔮 Future
 
 **Phase:** design, with a repository scaffold. The domain specifications are at draft 1. The
-workspace builds and its smoke tests pass, but the packages hold no domain logic yet. Last
-updated November 2026.
+catalog module has an executable schema and a tested model in `@wyatt/core`; the other
+modules have specifications only. Last updated November 2026.
 
 ## Repository layout
 
@@ -13,16 +13,23 @@ on `ser/chat` (see `ser/chat/docs/app-family.md`):
 
 | Path | Package | Role |
 |---|---|---|
-| `packages/domain` | `@wyatt/domain` | IDs (ULID), integer quantity and money arithmetic |
+| `packages/domain` | `@wyatt/domain` | IDs (ULID), integer quantity and money arithmetic, partnames |
 | `packages/bom-engine` | `@wyatt/bom-engine` | The parametric BOM engine. Only the request types and a stub `explode` so far |
-| `packages/core` | `@wyatt/core` | Control logic per module strand. So far: the module table, and the multi-strand test (`src/multi-strand/`) |
+| `packages/core` | `@wyatt/core` | Control logic per module strand: one folder and one entry point per module (`@wyatt/core/catalog`), shared results and SQL helpers at the root, and the multi-strand test (`src/multi-strand/`) |
 | `apps/cli` | `@wyatt/cli` | Headless client, the first app target |
 
 TypeScript (NodeNext, strict) and vitest. `core` uses the published Sereus stack
 (`@serfab/cadre-core` 1.21, `@quereus/quereus` 4.25, Optimystic 1.25), pinned in the root
 `resolutions` the way chat pins it.
-GUI apps come with the appeus setup. They will go under `apps/<target>` and link to `core`,
-and the specs will move to `design/specs/domain/`.
+**Adding a module** (parties, ops…): write `docs/specs/<module>.qsql` (the build generates
+`<MODULE>_SCHEMA` from every `.qsql` there), then `packages/core/src/<module>/` with its sApp
+config, model interface, implementation and contract suite, and an entry point
+`./<module>` in core's `package.json`. `src/catalog/` is the pattern.
+
+GUI apps come with the appeus setup: one appeus project at this repository's root, one
+target per tool and platform under `apps/<target>` (for example `apps/product`), with the
+specs moved to `design/specs/domain/`. Tools are not modules: a vendor tool works in parties
+and ops, so the per-module boundary is `@wyatt/core/<module>`, not the app folder.
 
 ## Resume here
 
@@ -78,13 +85,22 @@ needs no cross-strand joins, postings or Bonum.
 1. ✅ Catalog schema [specs/catalog.qsql](specs/catalog.qsql). It is generated into
    `@wyatt/core` (`CATALOG_SCHEMA`, `catalogSAppConfig()`). `packages/core/src/catalog/`
    tests each rule in memory, and the main ones on a real strand.
-2. ⬜ Catalog model in `@wyatt/core`: create, copy and edit a draft; release (with the
-   validation explosions from B); minor revisions; parts and standard packages. One
-   interface with a mock and a Sereus implementation, held to one contract test suite (the
-   chat pattern).
+2. ✅ Catalog model `@wyatt/core/catalog` (`src/catalog/`): `CatalogModel` (model.ts) with
+   reference data, families, drafts saved as a whole, release, retire, minor revisions,
+   parts (canonical values, next part number), standard packages and where-used.
+   * **One implementation, two databases.** `createCatalogModel` is written against the
+     strand's Quereus `Database`. `openStrandCatalog` runs it on a strand.
+     `openMemoryCatalog` runs it on an in-memory database built from the same schema; this
+     is the "mock", for UI work and demos, and it cannot drift from the strand's rules.
+     `loadSampleCatalog` fills it with an illustrative hydroponics line.
+   * **One contract suite** (`src/testing/catalog-contract.ts`, 12 tests) runs against both.
+   * **Waiting on B:** release validation explosions, PartVersion rows, cycle checks.
+   * **Read side kept small** until the UI stories say which queries the screens need.
 3. ⬜ Hydroponics product line as the first real data set (small). The ATI 2014 corpus is
    loaded only as a volume test and a test of BOM scripting, never as working data.
-4. ⬜ Appeus setup and the product-manager UI.
+4. ⬜ Appeus setup and the product-manager UI. Before the UI: stories from the owner
+   (hydroponics use), and three prodim topics product.md lacks: generic and custom
+   "reserve" basenames, document templates, finding documents.
 
 After these, the build order is:
 1. catalog module (C above);
@@ -109,6 +125,7 @@ After these, the build order is:
 | Multi-strand test (packages/core/src/multi-strand) | ✅ steps 1–5 |
 | BOM engine prototype against the 2014 corpus | ⬜ next |
 | Catalog schema ([specs/catalog.qsql](specs/catalog.qsql)), tested in memory and on a strand | ✅ |
+| Catalog model (`@wyatt/core/catalog`), one contract suite in memory and on a strand | ✅ |
 | Executable schemas of the other modules | ⬜ |
 | Appeus project setup (stories, UI specs per target) | ⬜ |
 
@@ -149,6 +166,27 @@ The reasoning is in [Design.md](Design.md).
   through mutation context, but the value is asserted by the writer, not verified. Role
   checks (product.md §9) need signed writes against the strand's member keys, as Taleus does
   with `verify(digest(…))`. To be designed once for all modules.
+
+* ❓ **Allocating part numbers across devices.** `parts.create` takes the highest `Pnum` plus
+  one, inside the inserting transaction.
+  * **No sequences, by design.** Quereus has no sequence or auto-increment objects
+    (`ser/quereus/docs/architecture.md`, "Sequential ID Generation"): validators re-execute
+    a transaction's statements, so a value must come from the tables or the mutation
+    context, never from hidden counter state. A sequence in a distributed store is a
+    counter row (or max + 1) plus optimistic concurrency.
+  * **Online, a race should fail cleanly.** Optimystic treats the read of the maximum as a
+    dependency. When two machines insert the same unique value at once, the loser's whole
+    transaction is refused at pend with the ordinary constraint error
+    (`ser/optimystic/docs/transactions.md`, regression `two-node-unique-value-race`).
+    Working default: retry with the next number, a few times. Not yet tested with two
+    nodes on the catalog strand.
+  * **Offline is unsolved.** A write made while a node is alone, re-issued later, can fork
+    a collection (`ser/sereus/docs/architecture.md`, "Writes made while alone").
+    Optimystic's CRDT-sync design (`crdt-sync.md`) foresees tentative results that are
+    confirmed at a stability horizon, plus a "fence" for writes that must be sequenced.
+    That fits a number that is provisional until it is durable, but it is a design, not
+    shipped. Until then, numbering needs a connected cohort. The partname
+    (`a:chan(1200,6,75)`) is already a unique human name while a number is pending.
 
 * ✅ **Quereus multi-strand mechanism.** Sereus gives each strand its own `Database`, with
   its tables in schema `App`, and Quereus has no `ATTACH`. Cross-strand reads are therefore

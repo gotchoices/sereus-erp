@@ -328,9 +328,11 @@ table Process (
         > coalesce((select max(m.Minor) from committed.MinorRevision m where m.FamilyId = new.FamilyId and m.Ver = new.Ver), 0))),
   constraint ProcessDraftDelete check on delete (not exists (select 1 from committed.Version v
     where v.FamilyId = old.FamilyId and v.Ver = old.Ver and v.State <> 'draft')),
-  -- No line may be left naming a deleted step, unless the whole version went with it.
+  -- No line may be left naming a deleted step, unless the whole version went with it or the
+  -- step was replaced in the same transaction (a draft saved as a whole).
   constraint ProcessUnused check on delete (not exists (select 1 from BomLine b
-    where b.FamilyId = old.FamilyId and b.Ver = old.Ver and b.ProcessIdx = old.Idx)),
+    where b.FamilyId = old.FamilyId and b.Ver = old.Ver and b.ProcessIdx = old.Idx)
+    or exists (select 1 from Process p where p.FamilyId = old.FamilyId and p.Ver = old.Ver and p.Idx = old.Idx)),
   constraint ProcessAuditInsert check on insert (coalesce(CreatedBy = context.Actor and CreatedAt = context.Now
     and UpdatedBy = CreatedBy and UpdatedAt = CreatedAt, false)),
   constraint ProcessAuditUpdate check on update (coalesce(new.UpdatedBy = context.Actor and new.UpdatedAt = context.Now
@@ -374,7 +376,8 @@ table Document (
     else new.FromMinor = 0 and new.ToMinor is null end),
   constraint DocumentDraftDelete check on delete (not exists (select 1 from committed.Version v
     where v.FamilyId = old.FamilyId and v.Ver = old.Ver and v.State <> 'draft')),
-  constraint DocumentUnused check on delete (not exists (select 1 from Note n where n.DocumentId = old.Id)),
+  constraint DocumentUnused check on delete (not exists (select 1 from Note n where n.DocumentId = old.Id)
+    or exists (select 1 from Document d where d.Id = old.Id)),
   constraint DocumentAuditInsert check on insert (coalesce(CreatedBy = context.Actor and CreatedAt = context.Now
     and UpdatedBy = CreatedBy and UpdatedAt = CreatedAt, false)),
   constraint DocumentAuditUpdate check on update (coalesce(new.UpdatedBy = context.Actor and new.UpdatedAt = context.Now
