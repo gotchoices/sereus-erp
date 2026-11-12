@@ -1,8 +1,8 @@
 # Project Spec
 
-> **Status: proposed, awaiting the owner's approval** (November 2026). Mark changes with
-> `<!--EC … -->` comments or edit directly. Once approved, the targets are scaffolded with
-> `add-app.sh` (see the end of this file).
+> **Status:** targets approved by the owner (November 2026): `web` in SvelteKit and `mobile`
+> in React Native, both scaffolded. Still open: the publisher id (below). Mark changes with
+> `<!--EC … -->` comments or edit directly.
 
 This document captures key decisions for the project. Complete this during the discovery phase before adding app scaffolds.
 
@@ -68,8 +68,8 @@ belongs to that module's strand (decision log, STATUS.md).
 
 | App Name | Platform | Framework | Status |
 |----------|----------|-----------|--------|
-| web | browser | sveltekit | proposed: first, product section |
-| mobile | iOS/Android | react-native | proposed: after web's product section |
+| web | browser | sveltekit | scaffolded; product section first |
+| mobile | iOS/Android | react-native | scaffolded; after web's product section |
 | cli | node | typescript (`@wyatt/cli`) | scaffold exists |
 | vendor | browser | sveltekit | future: a vendor's own app, vendor link strand only |
 | shop | iOS/Android or browser | tbd | future: an outside shop's app, shop link strand only |
@@ -145,10 +145,6 @@ first). They never touch SQL, strands or Sereus directly. The same model runs:
 
 *After completing this document, run `add-app.sh` for each target to scaffold the apps.*
 
-Once approved:
-
-```bash
-./appeus/scripts/add-app.sh --target web --framework sveltekit
-# then add "apps/web" to the root package.json workspaces
-./appeus/scripts/add-app.sh --target mobile --framework react-native   # later
-```
+**Stories** are per target and named by module: `design/stories/<target>/<module>-NN-<name>.md`
+(`product-01-start-a-family.md`). Modules sort together, numbers order the stories within a
+module, and a story that spans modules is filed under the module where it starts.
