@@ -144,3 +144,37 @@ These came up while working your answers into [Findings.md](Findings.md) (Novemb
     complete. Is it OK to extract only the product, MTR and vendor-price tables into a scratch
     area (not into `erp/`), leaving the personal and payroll tables untouched?
     > It is too big to copy.
+
+## F. Running WyattERP as an installation (November 2026)
+
+The working defaults are in [deployment.md](../../design/specs/domain/deployment.md) and stories
+settings-02 to settings-07; answer inline if a default is wrong.
+
+34. **Restored records' audit fields:** after a restore from an export, should each record
+    show who restored it and when, with the original author and date kept as history (the
+    default)? Or should a restore write the original audit fields, which needs an exception
+    in the schema's audit rules?
+    > Seems like a restore should only be possible to an empty database and should not be detectable to the regular user (i.e. write original audit fields).  I don't think I should be able to restore into an active DB with contents.
+
+    Adopted (deployment.md §9). Restore is refused into a strand with any records, and each
+    restored write carries the original author and time as its mutation context, which the
+    audit rules already accept, so no schema exception is needed. When signed writes are
+    enforced later, a restore will need to be an owner-signed act the audit rules recognize.
+35. **Export format:** YAML (the default) or JSON?
+    > I like yaml as a default.
+36. **First machines:** which machines will hold the first installation (for example a
+    storage machine at home or on a VPS, plus your desktop running the web app)? This decides
+    what the two-machine test should look like.
+    > our tests in the suite should be generic and try to cover common cases, not be specific to what I happen to choose.
+
+    Adopted: the multi-machine tests cover common arrangements (a storage machine and a web
+    machine, two web machines, an owner offline while another machine joins), not one site's.
+37. **Two strands for one module:** if two machines found the catalog strand while out of touch,
+    is showing both and letting an owner remove one (the default) enough for now?
+    > Could this really happen?  It doesn't make sense to me.  If two machines found strands, they are two different strands.  I'm not sure the software has anything to detect or complain about.  Am I wrong?
+
+    Right. The concern came only from assuming one catalog strand per party, which nothing
+    requires. Now a party may have several strands of a module, each founded on purpose with
+    a name and a note of what it is for; with several, the app asks which to work in
+    (deployment.md §7, settings-05).
+

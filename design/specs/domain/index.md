@@ -19,6 +19,7 @@ deliberately revisable: if one causes trouble in practice, change it here first.
 | [product.md](product.md) | Product catalog: classes, families, versions and minor revisions, parameters, parts and part numbers, packages, BOM lines, routing, notes and QC, interchangeability |
 | [bom-engine.md](bom-engine.md) | The parametric engine: explosion algorithm, script sandbox and host API, depth modes, costing and pricing, determinism, results and stamps, migration from the ATI Tcl corpus |
 | [operations.md](operations.md) | Locations, documents and moves, statuses, balances, demand and allocation, planning and coverage views, order lines with packages and re-explosion, runs and serials, receiving, shipping, adjustments, postings to Bonum and AR |
+| [deployment.md](deployment.md) | Machines, owner and recovery keys, founding strands and saying what each is for, joining other parties' strands, moving a machine, reachability, backup and restore. The same for every client (web app, the `wyatt` command) |
 | [purchasing.md](purchasing.md) | Vendors and shops as suppliers, bids and price breaks, purchasing rounds, award by part or by labor, quantity suggestions, PO and run creation, vendor and shop strands |
 
 Read them in that order. `architecture.md` sets the conventions that the rest assume.

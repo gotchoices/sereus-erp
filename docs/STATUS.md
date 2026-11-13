@@ -175,6 +175,33 @@ needs no cross-strand joins, postings or Bonum.
      * ⬜ Documents (ATI `prd_doc`, about 19,900 references by family) and notes (the noedit
        files under old/ati/doc), so the sample shows them too.
      * ⬜ The owner browses the sample and writes stories from it; then UX passes.
+   * **Direction (owner, November 2026): multi-machine first, then real use.** Before more
+     catalog UI, make WyattERP run as a real installation: start one, admit machines by
+     invitation, owner and recovery keys, storage machines for redundancy, reachability by
+     any libp2p means (no shared-LAN assumption), moving a machine, export and restore. Then
+     the owner enters a real case's families (a hydroponics company, kept out of the specs
+     and stories, which are for any user), and stories and UX passes come from that use. Rules: [deployment.md](../design/specs/domain/deployment.md); web stories
+     settings-02 to settings-07. Sereus supplies machines, keys, invitations, storage
+     replicas and reachability (cadre-cli, cadre-host); WyattERP's own part is the web app's
+     start-or-join, the Settings screens, founding and finding strands, and export/restore.
+     * ⬜ Slice 7: start or join (settings-02). The web app's node today always founds a
+       party (`apps/web/src/lib/server/node.ts`); it needs a first-run choice and a join
+       path by invitation. Then multi-machine tests over common arrangements (Q36): a
+       storage machine and a web machine, two web machines, an owner offline while another
+       machine joins; each sees the others' writes.
+     * ⬜ Slices 8–11: machines, owner keys, strands (named, with a note of intent; several of
+       a module allowed), backup (settings-03 to -05, -07). Moving a machine (settings-06) is
+       add and remove, with no control of its own.
+   * Product stories revised for UX (owner, November 2026): each now says what the user
+     needs to understand (family, class, parameter, partname, version, draft, minor revision,
+     part number) and where it is explained on the spot; the family page shows the current
+     definition; partname values are shown with their meaning; people by name; empty
+     sections stay out of the way. New story product-06 (find a family or part and
+     understand it). The generated product screens are stale until a UX pass regenerates
+     them from the revised stories.
+     * ⬜ Faster bulk writes for restore and imports: batch many writes in one transaction
+       where the model allows, measure on a strand, and take what we find to Sereus as
+       issues or PRs (the ATI import: 1–4 s per write, growing with table size).
    * ⬜ Owner's answers to the questions in the stories (working defaults used meanwhile).
    * ⬜ Test data: import the ATI 2014 catalog into a local-only strand once the first screens
      work. Never into a strand shared with others, and never in committed screenshots.
@@ -240,6 +267,7 @@ The reasoning is in [Design.md](Design.md).
 | Packages: `@wyatt/core` holds the control logic, and computational modules get specific names (`@wyatt/bom-engine`), never a general "engine" | owner, November 2026 |
 | Partnames for engineering, part numbers for commerce: a number is issued when first needed, and operations that need one wait until it is confirmed | owner, November 2026 |
 | One ERP app per platform (`web`, `mobile`), each module a section shown by strand membership; the product manager is the first section. Separate targets only for other parties (vendor, shop) | owner, November 2026 |
+| Rules every client shares (deployment and the like) go in the domain contract; stories stay per appeus target and cross-reference other clients. The `wyatt` command (apps/cli) is not an appeus target: it follows the domain contract and documents its own commands | owner and agent, November 2026 |
 
 ## Open items
 
