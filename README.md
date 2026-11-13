@@ -80,6 +80,10 @@ folder to start over. `yarn dev:mock` runs on an in-memory catalog instead, with
 `yarn dev_loop [port]` (default 5174) runs the dev server and starts it again whenever it
 exits, on the same port; kill the server process to restart it, Ctrl-C to end the loop.
 
+With the private ATI extract in `data/` (see [tools/legacy/README.md](tools/legacy/README.md)),
+`yarn import:ati` loads ATI's 2014 catalog into a separate node folder, `data/wyatt-ati`, as
+test data, and `yarn dev:ati` serves it on port 5175. Stop `dev:ati` while importing.
+
 ## Built on
 
 * [Sereus](../sereus): strands, cadres and the peer-to-peer fabric

@@ -91,6 +91,20 @@ not SQLite:
   * `committed.T` reads T as of the start of the transaction. That is how "already released,
     so frozen" is expressed.
   * Assertions (`assertion … check (…)`) are global rules checked at commit.
+* **Cost at volume** (measured on the ATI catalog import, 8,000 families):
+  * No plan cache: every `exec`/`eval` parses and plans again, about half the CPU of a small
+    write. `packages/core/src/sql.ts` keeps prepared statements per database (`run`, `rows`).
+    A statement's parameter types are fixed by its first bind (1 is INTEGER, 0.5 is REAL), so
+    the cache keys on them.
+  * A global assertion re-runs over the whole table at every commit that touches it, unless
+    `explain_assertion` classifies it `row` or `group`. The catalog's two were `global`: about
+    0.8 s per release at 8,000 families.
+  * A deferred CHECK is cheap at any size when its subqueries look rows up by key from
+    `new.*`. One that joins, or reaches a table through an outer row on part of its key, scans.
+  * A deferred CHECK sees the row as its own write left it, not as it stands at commit; read
+    the committed row by key when later statements in the transaction change it.
+  * So the catalog has no assertions: its cross-row rules are keyed row checks
+    (`design/specs/domain/catalog.qsql`, header).
 * **Foreign keys:**
   * They are enforced, checked at commit on the child side, and RESTRICT by default.
   * Cascades run in no guaranteed order. A RESTRICT key between two tables that both cascade
@@ -106,5 +120,4 @@ not SQLite:
   * Rules may not depend on anything outside the strand, because peers re-run each
     transaction to validate it ([sereus-requirements.md](sereus-requirements.md)).
 * Bonum's notes on Quereus read performance (`ser/bonum/docs/quereus-perf.md`) still apply.
-  The ATI corpus load will show how assertions behave at volume.
 

@@ -21,6 +21,11 @@
 --     children behind (docs/sereus-requirements.md §5, regression test packages/core/src/stack/).
 --   * `json` columns hold arrays, compared structurally (so a unique key over a json column
 --     is a unique key over its value, not its spelling).
+--   * Cost at volume (measured at 8,000 families, Quereus 5.4): a global assertion re-runs over
+--     every row at each commit, and so does a check whose subquery joins, or reaches a table
+--     through an outer row on part of its key. A check that looks rows up by key from `new.*`
+--     (nesting scalar subqueries where one key leads to the next) costs the same at any size.
+--     So rules spanning rows are row checks written that way, and this file has no assertions.
 --
 -- Audit (architecture.md §9). Every table has CreatedAt/CreatedBy/UpdatedAt/UpdatedBy, filled
 -- from the mutation context: each write supplies `with context Actor = ?, Now = ?`. Actor is
@@ -109,6 +114,13 @@ table Family (
   constraint FamilyBaseFixed check on update (new.Base = old.Base or old.CurrentVer is null),
   constraint FamilyIdFixed check on update (new.Id = old.Id),
   constraint FamilyDeleteUnreleased check on delete (CurrentVer is null),
+  constraint FamilyCurrentIsReleased check on insert, update (
+    not exists (select 1 from Version v where v.FamilyId = new.Id and v.State = 'released'
+      and not coalesce(v.Ver = (select f.CurrentVer from Family f where f.Id = new.Id), false))
+    and coalesce((select v.State from Version v
+      where v.FamilyId = new.Id and v.Ver = (select f.CurrentVer from Family f where f.Id = new.Id)), 'released') = 'released'),
+  constraint DraftFollowsCurrent check on insert, update (not exists (select 1 from Version v
+    where v.FamilyId = new.Id and v.State = 'draft' and v.Ver <> coalesce((select f.CurrentVer from Family f where f.Id = new.Id), 0) + 1)),
   constraint FamilyAuditInsert check on insert (coalesce(CreatedBy = context.Actor and CreatedAt = context.Now
     and UpdatedBy = CreatedBy and UpdatedAt = CreatedAt, false)),
   constraint FamilyAuditUpdate check on update (coalesce(new.UpdatedBy = context.Actor and new.UpdatedAt = context.Now
@@ -151,6 +163,10 @@ table Version (
     and coalesce(new.PriceFormula = old.PriceFormula, new.PriceFormula is null and old.PriceFormula is null)
     and new.ExplodeDefault = old.ExplodeDefault)),
   constraint VersionDeleteDraft check on delete (State = 'draft'),
+  constraint FamilyCurrentIsReleased check on insert, update ((select v.State from Version v where v.FamilyId = new.FamilyId and v.Ver = new.Ver) is null
+    or coalesce((select v.State from Version v where v.FamilyId = new.FamilyId and v.Ver = new.Ver) = 'released', false) = coalesce((select f.CurrentVer from Family f where f.Id = new.FamilyId) = new.Ver, false)),
+  constraint DraftFollowsCurrent check on insert, update (coalesce((select v.State from Version v where v.FamilyId = new.FamilyId and v.Ver = new.Ver) <> 'draft', true)
+    or new.Ver = coalesce((select f.CurrentVer from Family f where f.Id = new.FamilyId), 0) + 1),
   constraint VersionAuditInsert check on insert (coalesce(CreatedBy = context.Actor and CreatedAt = context.Now
     and UpdatedBy = CreatedBy and UpdatedAt = CreatedAt, false)),
   constraint VersionAuditUpdate check on update (coalesce(new.UpdatedBy = context.Actor and new.UpdatedAt = context.Now
@@ -161,17 +177,14 @@ table Version (
 unique index VersionOneDraft on Version(FamilyId) where State = 'draft';
 unique index VersionOneReleased on Version(FamilyId) where State = 'released';
 
--- Family.CurrentVer names the released version, or is null when none is released.
-assertion FamilyCurrentIsReleased check (not exists (
-  select 1 from Family f
-  where (f.CurrentVer is null and exists (select 1 from Version v where v.FamilyId = f.Id and v.State = 'released'))
-     or (f.CurrentVer is not null and not exists (
-           select 1 from Version v where v.FamilyId = f.Id and v.Ver = f.CurrentVer and v.State = 'released'))));
-
--- The draft, if any, is numbered CurrentVer + 1 (1 when nothing is released).
-assertion DraftFollowsCurrent check (not exists (
-  select 1 from Version v join Family f on f.Id = v.FamilyId
-  where v.State = 'draft' and v.Ver <> coalesce(f.CurrentVer, 0) + 1));
+-- Family.CurrentVer names the released version, or is null when none is released; the draft,
+-- if any, is numbered CurrentVer + 1 (1 when nothing is released). Checked from both sides by
+-- the FamilyCurrentIsReleased and DraftFollowsCurrent constraints on Family and on Version.
+-- They are row checks, not global assertions, so a commit checks only the families it
+-- touched (Quereus runs a global assertion over every family on every commit: about 0.8 s
+-- per release at 8,000 families). Each one reads the row's committed state by key, never
+-- `new.*` alone: a deferred check sees the row as that write left it, and a release writes
+-- Version and Family in separate statements.
 
 -- Minor revisions of a released version (product.md §5). Minor 0 is the release itself and
 -- has no row. Insert-only, one per transaction, numbered from 1.
@@ -282,9 +295,8 @@ table BomLine (
     where p.FamilyId = new.FamilyId and p.Ver = new.Ver and p.Idx = new.ProcessIdx)),
   constraint BomLinePos check (Pos >= 1),
   constraint BomLineChildParams check (json_type(ChildParams) = 'array'),
-  constraint BomLineChildVer check on insert, update (ChildVer is null or exists (
-    select 1 from Version v join Family f on f.Id = v.FamilyId
-    where f.Base = new.Component and v.Ver = new.ChildVer and v.State <> 'draft')),
+  constraint BomLineChildVer check on insert, update (ChildVer is null or coalesce((select v.State from Version v
+    where v.FamilyId = (select f.Id from Family f where f.Base = new.Component) and v.Ver = new.ChildVer) <> 'draft', false)),
   constraint BomLineDraft check on insert, update (not exists (select 1 from committed.Version v
     where v.FamilyId = new.FamilyId and v.Ver = new.Ver and v.State <> 'draft')),
   constraint BomLineDraftDelete check on delete (not exists (select 1 from committed.Version v
@@ -458,8 +470,8 @@ table Part (
   constraint PartTracking check (Tracking in ('none', 'run', 'serial')),
   constraint PartLevels check (coalesce(MinLevel >= 0, true) and coalesce(TargetLevel >= 0, true)
     and coalesce(MinBuy > 0, true) and coalesce(ShelfLifeDays > 0, true)),
-  constraint PartKind check on insert, update (exists (select 1 from Family f join Class c on c.Prefix = f.ClassPrefix
-    where f.Id = new.FamilyId and c.Kind in ('part', 'custom'))),
+  constraint PartKind check on insert, update (coalesce((select c.Kind from Class c where c.Prefix = (select f.ClassPrefix from Family f where f.Id = new.FamilyId))
+    in ('part', 'custom'), false)),
   constraint PartIdentityFixed check on update (new.Id = old.Id and new.FamilyId = old.FamilyId and new.Params = old.Params),
   constraint PartNoDelete check on delete (false),
   constraint PartAuditInsert check on insert (coalesce(CreatedBy = context.Actor and CreatedAt = context.Now
@@ -497,8 +509,8 @@ table PartVersion (
   UpdatedAt text default Now, UpdatedBy text default Actor,
   primary key (PartId, Ver),
   constraint PartVersionPart foreign key (PartId) references Part(Id),
-  constraint PartVersionReleased check on insert (exists (select 1 from Part p join Version v on v.FamilyId = p.FamilyId
-    where p.Id = new.PartId and v.Ver = new.Ver and v.State <> 'draft')),
+  constraint PartVersionReleased check on insert (coalesce((select v.State from Version v
+    where v.FamilyId = (select p.FamilyId from Part p where p.Id = new.PartId) and v.Ver = new.Ver) <> 'draft', false)),
   constraint PartVersionInsertOnly check on update, delete (false),
   constraint PartVersionAuditInsert check on insert (coalesce(CreatedBy = context.Actor and CreatedAt = context.Now
     and UpdatedBy = CreatedBy and UpdatedAt = CreatedAt, false))
@@ -515,8 +527,8 @@ table StandardPackage (
   constraint StandardPackageFamily foreign key (FamilyId) references Family(Id),
   constraint StandardPackageName unique (FamilyId, Name),
   constraint StandardPackageParams check (json_type(Params) = 'array'),
-  constraint StandardPackageKind check on insert, update (exists (select 1 from Family f join Class c on c.Prefix = f.ClassPrefix
-    where f.Id = new.FamilyId and c.Kind = 'package')),
+  constraint StandardPackageKind check on insert, update (coalesce((select c.Kind from Class c where c.Prefix = (select f.ClassPrefix from Family f where f.Id = new.FamilyId))
+    = 'package', false)),
   constraint StandardPackageAuditInsert check on insert (coalesce(CreatedBy = context.Actor and CreatedAt = context.Now
     and UpdatedBy = CreatedBy and UpdatedAt = CreatedAt, false)),
   constraint StandardPackageAuditUpdate check on update (coalesce(new.UpdatedBy = context.Actor and new.UpdatedAt = context.Now

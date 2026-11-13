@@ -4,3 +4,4 @@
 // modules share.
 export { type ModuleKey, type ModuleInfo, MODULES, moduleInfo } from './modules.js';
 export { type Result, type CoreError, type CoreErrorKind, ok, fail } from './result.js';
+export { openMemoryDb } from './sql.js';

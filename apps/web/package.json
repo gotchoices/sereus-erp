@@ -12,7 +12,9 @@
     "test": "echo \"no web tests yet\"",
     "start": "node build",
     "dev:mock": "WYATT_DATA=memory vite dev",
-    "dev_loop": "scripts/dev-loop.sh"
+    "dev_loop": "scripts/dev-loop.sh",
+    "import:ati": "node scripts/import-ati.ts",
+    "dev:ati": "WYATT_HOME=../../data/wyatt-ati WYATT_SEED=none WYATT_LABEL='ATI 2014 test data' scripts/dev-loop.sh 5175"
   },
   "devDependencies": {
     "@sveltejs/adapter-node": "^5.0.0",

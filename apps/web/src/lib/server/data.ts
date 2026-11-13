@@ -30,13 +30,17 @@ export interface BackendStatus {
 	peerId: string | null;
 	/** Whether another machine of the party is connected right now. */
 	connected: boolean;
+	/** Shown in the top bar when set (WYATT_LABEL), e.g. for the ATI test node. */
+	label: string | null;
 }
+
+const label = process.env.WYATT_LABEL?.trim() || null;
 
 /** The backend for a request. In memory mode, `?variant=` picks the catalog. */
 export async function backendFor(url: URL): Promise<Backend> {
 	if (dataMode === 'memory') {
 		const variant = variantOf(url);
-		return { catalog: await memoryCatalog(variant), status: { mode: 'memory', variant, peerId: null, connected: false } };
+		return { catalog: await memoryCatalog(variant), status: { mode: 'memory', variant, peerId: null, connected: false, label } };
 	}
 	const running = await runningNode();
 	return {
@@ -48,6 +52,7 @@ export async function backendFor(url: URL): Promise<Backend> {
 			variant: null,
 			peerId: running.node.peerId?.toString() ?? null,
 			connected: running.node.getControlConnectionCount() > 0,
+			label,
 		},
 	};
 }

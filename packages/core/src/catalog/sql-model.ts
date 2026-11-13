@@ -11,7 +11,7 @@
 import type { Database, SqlValue } from '@quereus/quereus';
 import { canonicalNumber, formatPartname, isBase, newId, parsePartname } from '@wyatt/domain';
 import { attempt, CoreFailure, toCoreError, type Result } from '../result.js';
-import { rows, serialized, transaction, type Row } from '../sql.js';
+import { rows, run, serialized, transaction, type Row } from '../sql.js';
 import type {
   BomLineDef, CatalogModel, Class, DocumentDef, DraftDefinition, Family, FamilyFilter, FamilyPatch,
   MinorChange, NewFamily, NoteDef, Operation, ParameterDef, Part, PartFields, PartRef, ProcessDef,
@@ -203,7 +203,7 @@ export function createCatalogModel(db: Database, opts: CatalogModelOptions): Cat
   /** Delete everything that hangs off a draft version, children before parents (a whole-draft save). */
   async function deleteContents(familyId: string, ver: number): Promise<void> {
     for (const t of ['Note', 'BomLine', 'AllowedValue', 'Parameter', 'Process', 'Document']) {
-      await db.exec(`delete from App.${t} where FamilyId = ? and Ver = ?`, [familyId, ver] as never);
+      await run(db, `delete from App.${t} where FamilyId = ? and Ver = ?`, [familyId, ver]);
     }
   }
 
@@ -358,7 +358,7 @@ export function createCatalogModel(db: Database, opts: CatalogModelOptions): Cat
         const fam = await family(id);
         if (fam.currentVer !== null) throw refused('FamilyDeleteUnreleased', `${fam.base} has been released; mark it obsolete instead`);
         // The draft and everything under it go by `on delete cascade` (catalog.qsql).
-        await inTxn(() => db.exec('delete from App.Family where Id = ?', [fam.id] as never));
+        await inTxn(() => run(db, 'delete from App.Family where Id = ?', [fam.id]));
       }),
 
       whereUsed: (base: string) => op(async () => {
@@ -426,7 +426,7 @@ export function createCatalogModel(db: Database, opts: CatalogModelOptions): Cat
       discardDraft: (familyId: string) => op(async () => {
         const fam = await family(familyId);
         if (fam.draftVer === null) throw notFound(`${fam.base} has no draft`);
-        await inTxn(() => db.exec(`delete from App.Version where FamilyId = ? and Ver = ? and State = 'draft'`, [fam.id, fam.draftVer] as never));
+        await inTxn(() => run(db, `delete from App.Version where FamilyId = ? and Ver = ? and State = 'draft'`, [fam.id, fam.draftVer]));
       }),
 
       release: (familyId: string, r: Release) => op(async (w) => {
@@ -570,7 +570,7 @@ export function createCatalogModel(db: Database, opts: CatalogModelOptions): Cat
       remove: (id: string) => op(async () => {
         const [r] = await rows(db, 'select 1 as X from App.StandardPackage where Id = ?', [id]);
         if (!r) throw notFound(`no standard package ${id}`);
-        await inTxn(() => db.exec('delete from App.StandardPackage where Id = ?', [id] as never));
+        await inTxn(() => run(db, 'delete from App.StandardPackage where Id = ?', [id]));
       }),
     },
   };
@@ -609,18 +609,18 @@ class Writer {
 
   async insert(table: string, values: Row): Promise<void> {
     const cols = Object.keys(values);
-    await this.db.exec(
+    await run(this.db,
       `insert into App.${table} (${cols.join(', ')}) with context Actor = :ctx_actor, Now = :ctx_now values (${cols.map((c) => `:v_${c}`).join(', ')})`,
-      { ctx_actor: this.actor, ctx_now: this.now, ...prefixed('v_', values) } as never);
+      { ctx_actor: this.actor, ctx_now: this.now, ...prefixed('v_', values) });
   }
 
   async update(table: string, set: Row, where: Row): Promise<void> {
     const all = { ...set, UpdatedAt: this.now, UpdatedBy: this.actor };
-    await this.db.exec(
+    await run(this.db,
       `update App.${table} with context Actor = :ctx_actor, Now = :ctx_now
          set ${Object.keys(all).map((c) => `${c} = :s_${c}`).join(', ')}
          where ${Object.keys(where).map((c) => `${c} = :w_${c}`).join(' and ')}`,
-      { ctx_actor: this.actor, ctx_now: this.now, ...prefixed('s_', all), ...prefixed('w_', where) } as never);
+      { ctx_actor: this.actor, ctx_now: this.now, ...prefixed('s_', all), ...prefixed('w_', where) });
   }
 }
 

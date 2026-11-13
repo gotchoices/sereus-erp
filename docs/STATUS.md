@@ -146,7 +146,35 @@ needs no cross-strand joins, postings or Bonum.
      online/offline, machines not connected), connections and listen addresses. Checked in
      the owner's Chrome on the real node. Inviting machines and people, and the offline
      switch, are its story's Q1 and Q2 (later slices).
-   * ⬜ Next: the ATI import into a local-only strand as browse and volume data.
+   * 🟡 ATI catalog import (`tools/legacy/ati-catalog.ts`, run by `yarn import:ati` in
+     apps/web; mapping and commands in tools/legacy/README.md). Into its own node folder,
+     `data/wyatt-ati` (git-ignored), browsed with `yarn dev:ati` (port 5175, labeled "ATI 2014
+     test data" in the top bar). Results:
+     * Full dry run in memory: 8,298 families, 26,903 lines, 7,711 released, 12,206 parts with
+       their ATI numbers, 59 standard packages. Not released: 296 with an unreleased child,
+       281 with a line whose child-parameter count is wrong, 10 in cycles (530 parts skipped
+       with them). 74 unit spellings outside the six dimensions came in as counts; 53 `eng`
+       parameters as text. Report: `data/ati-import-report-memory.json`.
+     * It took 5.6 hours. Two causes, both fixed: Quereus has no plan cache (now
+       `packages/core/src/sql.ts` keeps prepared statements, 2.4× faster), and the catalog's
+       two global assertions re-ran over every family at each commit (0.8 s per release at
+       8,000 families). They are now keyed row checks, same rules and names, 12 ms per
+       release (docs/stack.md, "Cost at volume").
+     * Into the strand, the `b:` subset (190 families, 793 parts) took 17 minutes, about 30×
+       memory: 1.7 s per family, 1.2 s per release, 0.6 s per part, and 156 MB on disk.
+       The full corpus at that rate is about 10 hours and several GB. That cost is in the
+       Sereus/Optimystic write path, not yet profiled; it is the volume finding to take to
+       Sereus (docs/sereus-requirements.md).
+     * The owner chose a strategic sample over the full corpus, to evaluate the UI with real
+       data and draw stories from it. `--sample 5` takes each class's five richest active
+       families (BOM lines, routing, parameters, parts, documents) and everything they use:
+       215 families in all 16 classes, 339 lines, 1,620 parts, no problems. It is what
+       `data/wyatt-ati` holds now. 66 minutes into the strand; the cost per part grew as the
+       table filled (0.8 s each for the first 1,000, 3.9 s for the next 620), a second
+       volume finding to take to Sereus.
+     * ⬜ Documents (ATI `prd_doc`, about 19,900 references by family) and notes (the noedit
+       files under old/ati/doc), so the sample shows them too.
+     * ⬜ The owner browses the sample and writes stories from it; then UX passes.
    * ⬜ Owner's answers to the questions in the stories (working defaults used meanwhile).
    * ⬜ Test data: import the ATI 2014 catalog into a local-only strand once the first screens
      work. Never into a strand shared with others, and never in committed screenshots.

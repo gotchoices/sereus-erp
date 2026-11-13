@@ -13,6 +13,7 @@
 	<nav aria-label="Modules">
 		<a href={q('/product')} class="section" aria-current={page.url.pathname.startsWith('/product') ? 'page' : undefined}>Product</a>
 	</nav>
+	{#if data.status.label}<span class="label">{data.status.label}</span>{/if}
 	<span class="status" title={data.status.peerId ?? ''}>
 		{#if data.status.mode === 'memory'}
 			In-memory catalog ({data.status.variant})
@@ -55,6 +56,14 @@
 	.section[aria-current='page'] {
 		color: var(--text);
 		border-bottom-color: var(--accent);
+	}
+	.label {
+		font-size: 0.8rem;
+		font-weight: 600;
+		padding: 0.1rem 0.5rem;
+		border-radius: 3px;
+		background: var(--highlight);
+		color: var(--text);
 	}
 	.status {
 		color: var(--text-2);
