@@ -13,7 +13,7 @@ import { canonicalNumber, formatPartname, isBase, newId, parsePartname } from '@
 import { attempt, CoreFailure, toCoreError, type Result } from '../result.js';
 import { rows, run, serialized, transaction, type Row } from '../sql.js';
 import type {
-  BomLineDef, CatalogModel, Class, DocumentDef, DraftDefinition, Family, FamilyFilter, FamilyPatch,
+  About, BomLineDef, CatalogModel, Class, MachineName, DocumentDef, DraftDefinition, Family, FamilyFilter, FamilyPatch,
   MinorChange, NewFamily, NoteDef, Operation, ParameterDef, Part, PartFields, PartRef, ProcessDef,
   ReferenceUsage, Release, StandardPackage, Unit, Version, WhereUsed,
 } from './model.js';
@@ -289,7 +289,31 @@ export function createCatalogModel(db: Database, opts: CatalogModelOptions): Cat
     };
   }
 
+  const machines = reference<MachineName>('Machine', 'PeerId',
+    (m) => ({ PeerId: m.peerId, Label: m.label.trim() }),
+    (r) => ({ peerId: String(r.PeerId), label: String(r.Label), updatedAt: String(r.UpdatedAt) }),
+    (m) => m.peerId, 'Label');
+
   return {
+    about: {
+      get: () => op(async () => {
+        const [r] = await rows(db, 'select * from App.About where Id = 1');
+        return r ? mapAbout(r) : null;
+      }),
+      set: (a: About) => op(async (w) => {
+        const values = { Name: a.name.trim(), Purpose: a.purpose.trim(), Company: a.company.trim() };
+        const [exists] = await rows(db, 'select Id from App.About where Id = 1');
+        if (exists) await w.update('About', values, { Id: 1 });
+        else await w.insert('About', { Id: 1, ...values });
+        const [r] = await rows(db, 'select * from App.About where Id = 1');
+        return mapAbout(r!);
+      }),
+    },
+    machines: {
+      list: machines.list,
+      name: (peerId: string, label: string) => machines.put({ peerId, label, updatedAt: '' }),
+    },
+
     units: reference<Unit>('Unit', 'Code',
       (u) => ({ Code: u.code, Name: u.name, Dimension: u.dimension, Scale: u.scale, FactorNum: u.factorNum, FactorDen: u.factorDen }),
       (r) => ({ code: String(r.Code), name: String(r.Name), dimension: r.Dimension as Unit['dimension'], scale: Number(r.Scale), factorNum: num(r.FactorNum), factorDen: num(r.FactorDen) }),
@@ -574,6 +598,10 @@ export function createCatalogModel(db: Database, opts: CatalogModelOptions): Cat
       }),
     },
   };
+}
+
+function mapAbout(r: Row): About {
+  return { name: String(r.Name), purpose: String(r.Purpose), company: String(r.Company), createdAt: str(r.CreatedAt) };
 }
 
 function mapPackage(r: Row): StandardPackage {

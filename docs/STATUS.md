@@ -16,7 +16,9 @@ on `ser/chat` (see `ser/chat/docs/app-family.md`):
 | `packages/domain` | `@wyatt/domain` | IDs (ULID), integer quantity and money arithmetic, partnames |
 | `packages/bom-engine` | `@wyatt/bom-engine` | The parametric BOM engine. Only the request types and a stub `explode` so far |
 | `packages/core` | `@wyatt/core` | Control logic per module strand: one folder and one entry point per module (`@wyatt/core/catalog`), shared results and SQL helpers at the root, and the multi-strand test (`src/multi-strand/`) |
-| `apps/cli` | `@wyatt/cli` | Headless client, the first app target |
+| `packages/node` | `@wyatt/node` | One installation on a machine: its Sereus node, folder, keys and strands. Shared by the web app and the `wyatt` command |
+| `apps/cli` | `@wyatt/cli` | The `wyatt` command: set up and run a server, manage an installation ([README](../apps/cli/README.md)) |
+| `apps/web` | `@wyatt/web` | The web app (SvelteKit), appeus target `web` |
 
 TypeScript (NodeNext, strict) and vitest. `core` uses the published Sereus stack
 (`@serfab/cadre-core` 1.22, `@quereus/quereus` 5.4, Optimystic 1.27), pinned in the root
@@ -184,14 +186,37 @@ needs no cross-strand joins, postings or Bonum.
      settings-02 to settings-07. Sereus supplies machines, keys, invitations, storage
      replicas and reachability (cadre-cli, cadre-host); WyattERP's own part is the web app's
      start-or-join, the Settings screens, founding and finding strands, and export/restore.
-     * ⬜ Slice 7: start or join (settings-02). The web app's node today always founds a
-       party (`apps/web/src/lib/server/node.ts`); it needs a first-run choice and a join
-       path by invitation. Then multi-machine tests over common arrangements (Q36): a
-       storage machine and a web machine, two web machines, an owner offline while another
-       machine joins; each sees the others' writes.
-     * ⬜ Slices 8–11: machines, owner keys, strands (named, with a note of intent; several of
-       a module allowed), backup (settings-03 to -05, -07). Moving a machine (settings-06) is
-       add and remove, with no control of its own.
+     * ✅ Slices 7–11 (November 2026). One implementation of an installation on a machine,
+       `@wyatt/node` (`Installation`: start new, join by invitation or owner grant, machines,
+       invitations, owner keys and grants, catalogs, export and restore), used by both clients:
+       * the `wyatt` command (apps/cli, [README with quickstart](../apps/cli/README.md)): `init
+         new|join`, `serve` (a server: fixed ports 4101/4102, relay for the party), `service`
+         (systemd/launchd), and every management command, over a loopback admin channel while
+         `serve` runs;
+       * the web app: a first-run page (`/setup`, settings-02) and Settings sections for
+         machines, owner keys, catalogs and backup (settings-03 to -07). `yarn app` runs it on
+         `~/.wyatt-web` for real use; `yarn dev` still starts a sample installation.
+       * Catalog schema 0.2.0 adds `About` (name, purpose, company) and `Machine` (names); a
+         starting set of units, classes and operations is offered at founding (product-05 Q4);
+         YAML export and restore (`@wyatt/core/catalog` backup.ts) keep IDs, part numbers and
+         audit fields.
+       * Tested: `packages/node/src/installation.test.ts` (server starts, desktop joins, writes
+         both ways, owner grant, a third machine joins while the first is offline, removal; 65 s),
+         `legacy.test.ts` (a folder from before, on catalog 0.1.0, opens and upgrades),
+         `packages/core/src/catalog/backup.test.ts` (round trip with a minor revision and a
+         second writer). By hand: CLI server + CLI desktop + web app joining in a browser, a
+         catalog founded in the web app appearing on the CLI server, export and restore.
+     * ⬜ Owner trial: stand up a server (apps/cli/README.md, "Deploying on a Linux server"),
+       join the web app to it from a desktop elsewhere. Not yet tried across real networks
+       (NAT, firewall, a public name): only loopback and one LAN.
+     * ⬜ Left from the stories: QR codes for invitations and grants (text only now);
+       removing a strand in the web app (the call exists); another company's strands
+       (settings-05 Q1 default: later); a party-wide strand for machine names (deployment.md §4,
+       Open); restore progress in the web app.
+     * ❓ The existing dev folders (`apps/web/.wyatt`, `data/wyatt-ati`) open under the new code
+       as founded installations (checked on a copy made from a stopped node). A copy of
+       `data/wyatt-ati` taken while its dev server was running did not open, so
+       `data/wyatt-ati.bak-2026-11-13` may be unusable: re-copy it with the server stopped.
    * Product stories revised for UX (owner, November 2026): each now says what the user
      needs to understand (family, class, parameter, partname, version, draft, minor revision,
      part number) and where it is explained on the spot; the family page shows the current
@@ -199,9 +224,16 @@ needs no cross-strand joins, postings or Bonum.
      sections stay out of the way. New story product-06 (find a family or part and
      understand it). The generated product screens are stale until a UX pass regenerates
      them from the revised stories.
-     * ⬜ Faster bulk writes for restore and imports: batch many writes in one transaction
-       where the model allows, measure on a strand, and take what we find to Sereus as
-       issues or PRs (the ATI import: 1–4 s per write, growing with table size).
+     * ⬜ Full regeneration pass (owner's request): regenerate the web target's
+       consolidations, then every product screen (FamilyList, FamilyDetail, DraftEditor,
+       VersionView, PartList, PartDetail, ReferenceData), from the revised stories product-01
+       to -06, rather than patching the existing screens. Includes what product-06 adds: one
+       search in the top bar, term explanations within reach and a short guide page, "used
+       in". `check-stale.sh --target web` lists what remains. Review in Chrome on the owner's
+       dev server with seed data, never ATI data in committed screenshots.
+   * ⬜ Faster bulk writes for restore and imports: batch many writes in one transaction
+     where the model allows, measure on a strand, and take what we find to Sereus as
+     issues or PRs (the ATI import: 1–4 s per write, growing with table size).
    * ⬜ Owner's answers to the questions in the stories (working defaults used meanwhile).
    * ⬜ Test data: import the ATI 2014 catalog into a local-only strand once the first screens
      work. Never into a strand shared with others, and never in committed screenshots.
@@ -268,6 +300,10 @@ The reasoning is in [Design.md](Design.md).
 | Partnames for engineering, part numbers for commerce: a number is issued when first needed, and operations that need one wait until it is confirmed | owner, November 2026 |
 | One ERP app per platform (`web`, `mobile`), each module a section shown by strand membership; the product manager is the first section. Separate targets only for other parties (vendor, shop) | owner, November 2026 |
 | Rules every client shares (deployment and the like) go in the domain contract; stories stay per appeus target and cross-reference other clients. The `wyatt` command (apps/cli) is not an appeus target: it follows the domain contract and documents its own commands | owner and agent, November 2026 |
+| One implementation of "an installation on this machine" (`@wyatt/node`) under both the web app and the `wyatt` command, so either can start, join or manage what the other set up. The `wyatt` command does machines and keys itself rather than leaving them to Sereus's `cadre` | agent, November 2026 (slices 7–11) |
+| A server runs `wyatt serve`: fixed ports, a public name, and a circuit relay for the party; desktops (the web app) reserve a slot on it when they join, so they need no port forwarding | agent, November 2026; owner's "reachable via libp2p means" |
+| A strand's name, purpose and company, and the machines' names, are kept in the catalog strand (`About`, `Machine`) until a party-wide strand exists | agent, November 2026 (deployment.md §4, §7) |
+| A new installation or catalog is offered a starting set of units, classes and operations, on by default | owner, November 2026 (product-05 Q4) |
 
 ## Open items
 

@@ -2,7 +2,7 @@
   "name": "@wyatt/cli",
   "version": "0.0.0",
   "private": true,
-  "description": "Headless command-line client over @wyatt/core.",
+  "description": "The wyatt command: set up and run a WyattERP machine (a server, or any machine without a browser), and manage the installation.",
   "type": "module",
   "main": "./dist/main.js",
   "bin": {
@@ -17,7 +17,9 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@wyatt/core": "workspace:^"
+    "@wyatt/core": "workspace:^",
+    "@wyatt/node": "workspace:^",
+    "yaml": "^2.8.2"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

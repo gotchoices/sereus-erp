@@ -695,7 +695,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@libp2p/tcp@npm:^11.0.28":
+"@libp2p/tcp@npm:11.0.32, @libp2p/tcp@npm:^11.0.28":
   version: 11.0.32
   resolution: "@libp2p/tcp@npm:11.0.32"
   dependencies:
@@ -1667,8 +1667,10 @@ __metadata:
   dependencies:
     "@types/node": "npm:^24.0.0"
     "@wyatt/core": "workspace:^"
+    "@wyatt/node": "workspace:^"
     typescript: "npm:^5.9.3"
     vitest: "npm:^4.0.17"
+    yaml: "npm:^2.8.2"
   bin:
     wyatt: ./dist/main.js
   languageName: unknown
@@ -1696,6 +1698,7 @@ __metadata:
     libp2p: "npm:3.3.11"
     typescript: "npm:^5.9.3"
     vitest: "npm:^4.0.17"
+    yaml: "npm:^2.8.2"
   peerDependencies:
     "@quereus/quereus": ^5.4.0
     "@serfab/cadre-core": ^1.22.0
@@ -1706,6 +1709,23 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@wyatt/domain@workspace:packages/domain"
   dependencies:
+    typescript: "npm:^5.9.3"
+    vitest: "npm:^4.0.17"
+  languageName: unknown
+  linkType: soft
+
+"@wyatt/node@workspace:^, @wyatt/node@workspace:packages/node":
+  version: 0.0.0-use.local
+  resolution: "@wyatt/node@workspace:packages/node"
+  dependencies:
+    "@libp2p/circuit-relay-v2": "npm:4.2.14"
+    "@libp2p/tcp": "npm:11.0.32"
+    "@libp2p/websockets": "npm:10.1.22"
+    "@optimystic/db-p2p-storage-fs": "npm:1.27.0"
+    "@quereus/quereus": "npm:5.4.0"
+    "@serfab/cadre-core": "npm:1.22.0"
+    "@types/node": "npm:^24.0.0"
+    "@wyatt/core": "workspace:^"
     typescript: "npm:^5.9.3"
     vitest: "npm:^4.0.17"
   languageName: unknown
@@ -1726,6 +1746,7 @@ __metadata:
     "@types/node": "npm:^24.0.0"
     "@wyatt/core": "workspace:^"
     "@wyatt/domain": "workspace:^"
+    "@wyatt/node": "workspace:^"
     svelte: "npm:^5.0.0"
     svelte-check: "npm:^4.0.0"
     typescript: "npm:^5.0.0"
@@ -3661,6 +3682,15 @@ __metadata:
   version: 5.0.0
   resolution: "yallist@npm:5.0.0"
   checksum: 10c0/a499c81ce6d4a1d260d4ea0f6d49ab4da09681e32c3f0472dee16667ed69d01dae63a3b81745a24bd78476ec4fcf856114cb4896ace738e01da34b2c42235416
+  languageName: node
+  linkType: hard
+
+"yaml@npm:^2.8.2":
+  version: 2.9.1
+  resolution: "yaml@npm:2.9.1"
+  bin:
+    yaml: bin.mjs
+  checksum: 10c0/9d06676ef02b89559a8b10a71882bd2cdae81e8393dc8dbc871615c3259475d9609ad973d19cb3c9e71e72d6206e3d1e7aa241c7e55f3d16fd2e77db305827d6
   languageName: node
   linkType: hard
 

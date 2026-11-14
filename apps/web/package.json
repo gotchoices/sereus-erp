@@ -14,7 +14,8 @@
     "dev:mock": "WYATT_DATA=memory vite dev",
     "dev_loop": "scripts/dev-loop.sh",
     "import:ati": "node scripts/import-ati.ts",
-    "dev:ati": "WYATT_HOME=../../data/wyatt-ati WYATT_SEED=none WYATT_LABEL='ATI 2014 test data' scripts/dev-loop.sh 5175"
+    "dev:ati": "WYATT_HOME=../../data/wyatt-ati WYATT_SEED=none WYATT_LABEL='ATI 2014 test data' scripts/dev-loop.sh 5175",
+    "app": "WYATT_SEED=none WYATT_HOME=${WYATT_HOME:-$HOME/.wyatt-web} vite dev --port ${PORT:-5180} --strictPort"
   },
   "devDependencies": {
     "@sveltejs/adapter-node": "^5.0.0",
@@ -34,6 +35,7 @@
     "@quereus/quereus": "5.4.0",
     "@serfab/cadre-core": "1.22.0",
     "@wyatt/core": "workspace:^",
-    "@wyatt/domain": "workspace:^"
+    "@wyatt/domain": "workspace:^",
+    "@wyatt/node": "workspace:^"
   }
 }

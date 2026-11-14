@@ -11,8 +11,13 @@
 <header class="topbar">
 	<a class="brand" href={q('/')}>WyattERP</a>
 	<nav aria-label="Modules">
-		<a href={q('/product')} class="section" aria-current={page.url.pathname.startsWith('/product') ? 'page' : undefined}>Product</a>
+		{#if !data.setup || data.setup.ready}
+			<a href={q('/product')} class="section" aria-current={page.url.pathname.startsWith('/product') ? 'page' : undefined}>Product</a>
+		{/if}
 	</nav>
+	{#if data.status.strandName}
+		<a class="strand" href="/settings#strands" title={`${data.status.company ?? ''} catalog; this machine is “${data.status.machineLabel ?? ''}”`}>{data.status.strandName}</a>
+	{/if}
 	{#if data.status.label}<span class="label">{data.status.label}</span>{/if}
 	<span class="status" title={data.status.peerId ?? ''}>
 		{#if data.status.mode === 'memory'}
@@ -23,7 +28,7 @@
 			This device only
 		{/if}
 	</span>
-	<a href={q('/settings')} class="section" aria-current={page.url.pathname.startsWith('/settings') ? 'page' : undefined}>Settings</a>
+	{#if !data.setup || data.setup.phase === 'running'}<a href={q('/settings')} class="section" aria-current={page.url.pathname.startsWith('/settings') ? 'page' : undefined}>Settings</a>{/if}
 </header>
 
 <main>
@@ -64,6 +69,14 @@
 		border-radius: 3px;
 		background: var(--highlight);
 		color: var(--text);
+	}
+	.strand {
+		font-size: 0.875rem;
+		color: var(--text);
+		text-decoration: none;
+		border: 1px solid var(--border);
+		border-radius: 3px;
+		padding: 0.05rem 0.45rem;
 	}
 	.status {
 		color: var(--text-2);

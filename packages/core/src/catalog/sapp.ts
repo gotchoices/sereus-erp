@@ -5,7 +5,7 @@ export { CATALOG_SCHEMA };
 
 /** The catalog strand's sApp. Unsigned for now (see docs/sereus-requirements.md §2). */
 export const CATALOG_SAPP_ID = 'org.wyatterp.catalog';
-export const CATALOG_SAPP_VERSION = '0.1.0';
+export const CATALOG_SAPP_VERSION = '0.2.0';
 
 export function catalogSAppConfig(): SAppConfig {
   return {

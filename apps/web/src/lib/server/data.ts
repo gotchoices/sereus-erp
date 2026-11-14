@@ -11,7 +11,8 @@
  */
 import { fail, type Result } from '@wyatt/core';
 import { loadSampleCatalog, openMemoryCatalog, openStrandCatalog, type CatalogModel } from '@wyatt/core/catalog';
-import { runningNode } from './node';
+import type { StatusReport } from '@wyatt/node';
+import { installation } from './node';
 
 export type DataMode = 'strand' | 'memory';
 export type Variant = 'happy' | 'empty' | 'error';
@@ -32,6 +33,11 @@ export interface BackendStatus {
 	connected: boolean;
 	/** Shown in the top bar when set (WYATT_LABEL), e.g. for the ATI test node. */
 	label: string | null;
+	/** The catalog this machine works in, and whose it is (strand mode). */
+	strandName: string | null;
+	company: string | null;
+	/** This machine's name. */
+	machineLabel: string | null;
 }
 
 const label = process.env.WYATT_LABEL?.trim() || null;
@@ -40,24 +46,46 @@ const label = process.env.WYATT_LABEL?.trim() || null;
 export async function backendFor(url: URL): Promise<Backend> {
 	if (dataMode === 'memory') {
 		const variant = variantOf(url);
-		return { catalog: await memoryCatalog(variant), status: { mode: 'memory', variant, peerId: null, connected: false, label } };
+		return { catalog: await memoryCatalog(variant), status: memoryStatus(variant) };
 	}
-	const running = await runningNode();
+	const inst = await installation();
+	return { catalog: await inst.catalog(), status: statusFrom(await installationStatus()) };
+}
+
+/** The top bar's view of the installation. */
+export function statusFrom(st: StatusReport): BackendStatus {
+	const current = st.strands.find((x) => x.current) ?? null;
 	return {
-		// Built per request from the current @wyatt/core, over the long-lived node: a rebuilt
-		// model takes effect at once in development (vite.config.ts).
-		catalog: openStrandCatalog(running.node, running.catalogStrandId),
-		status: {
-			mode: 'strand',
-			variant: null,
-			peerId: running.node.peerId?.toString() ?? null,
-			connected: running.node.getControlConnectionCount() > 0,
-			label,
-		},
+		mode: 'strand',
+		variant: null,
+		peerId: st.peerId,
+		connected: st.connected > 0,
+		label,
+		strandName: current?.name ?? null,
+		company: current?.company ?? null,
+		machineLabel: st.machineLabel,
 	};
 }
 
-function variantOf(url: URL): Variant {
+/**
+ * The installation's status, read at most every two seconds: the layout asks on every request,
+ * and a status read touches every strand.
+ */
+let cached: { at: number; value: Promise<StatusReport> } | null = null;
+export async function installationStatus(fresh = false): Promise<StatusReport> {
+	if (fresh || !cached || Date.now() - cached.at > 2_000) {
+		const value = installation().then((i) => i.status());
+		cached = { at: Date.now(), value };
+		value.catch(() => { cached = null; });
+	}
+	return cached.value;
+}
+
+export function memoryStatus(variant: Variant): BackendStatus {
+	return { mode: 'memory', variant, peerId: null, connected: false, label, strandName: null, company: null, machineLabel: null };
+}
+
+export function variantOf(url: URL): Variant {
 	const v = url.searchParams.get('variant');
 	return v === 'empty' || v === 'error' ? v : 'happy';
 }

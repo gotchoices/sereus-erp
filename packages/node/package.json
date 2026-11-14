@@ -1,0 +1,38 @@
+{
+  "name": "@wyatt/node",
+  "version": "0.0.0",
+  "private": true,
+  "description": "One WyattERP installation on this machine: its Sereus node, folder, keys and strands. Shared by the web app and the wyatt command.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@libp2p/circuit-relay-v2": "4.2.14",
+    "@libp2p/tcp": "11.0.32",
+    "@libp2p/websockets": "10.1.22",
+    "@optimystic/db-p2p-storage-fs": "1.27.0",
+    "@quereus/quereus": "5.4.0",
+    "@serfab/cadre-core": "1.22.0",
+    "@wyatt/core": "workspace:^"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.17"
+  }
+}

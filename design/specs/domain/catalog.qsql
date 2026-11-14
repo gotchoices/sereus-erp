@@ -534,3 +534,42 @@ table StandardPackage (
   constraint StandardPackageAuditUpdate check on update (coalesce(new.UpdatedBy = context.Actor and new.UpdatedAt = context.Now
     and new.CreatedBy = old.CreatedBy and new.CreatedAt = old.CreatedAt, false))
 ) with context (Actor text null, Now text null);
+
+-- ── The strand itself and the party's machines (deployment.md §4, §7) ─────────────
+
+-- What this strand is for: one row, written when the strand is founded and editable later. It
+-- is how a person tells two catalogs apart before either has records, and what another party
+-- invited into the strand sees first.
+table About (
+  Id integer primary key,                 -- always 1
+  Name text,                              -- 'Catalog', 'Outdoor line'
+  Purpose text default '',                -- the note of intent
+  Company text default '',                -- whose catalog it is
+  CreatedAt text default Now, CreatedBy text default Actor,
+  UpdatedAt text default Now, UpdatedBy text default Actor,
+  constraint AboutOne check (Id = 1),
+  constraint AboutName check (length(trim(Name)) between 1 and 80),
+  constraint AboutPurpose check (length(Purpose) <= 500),
+  constraint AboutCompany check (length(Company) <= 120),
+  constraint AboutAuditInsert check on insert (coalesce(CreatedBy = context.Actor and CreatedAt = context.Now
+    and UpdatedBy = CreatedBy and UpdatedAt = CreatedAt, false)),
+  constraint AboutAuditUpdate check on update (coalesce(new.UpdatedBy = context.Actor and new.UpdatedAt = context.Now
+    and new.CreatedBy = old.CreatedBy and new.CreatedAt = old.CreatedAt, false))
+) with context (Actor text null, Now text null);
+
+-- The names people give the party's machines ('office server', 'shop laptop'). Sereus knows a
+-- machine only by its peer ID; the name is ours. Each machine names itself when it starts or
+-- joins, and an owner may rename any. Kept in the catalog because it is the strand every
+-- machine of the party holds (deployment.md §4, Open: a party-wide strand later).
+table Machine (
+  PeerId text primary key,
+  Label text,
+  CreatedAt text default Now, CreatedBy text default Actor,
+  UpdatedAt text default Now, UpdatedBy text default Actor,
+  constraint MachineLabel check (length(trim(Label)) between 1 and 64),
+  constraint MachinePeerFixed check on update (new.PeerId = old.PeerId),
+  constraint MachineAuditInsert check on insert (coalesce(CreatedBy = context.Actor and CreatedAt = context.Now
+    and UpdatedBy = CreatedBy and UpdatedAt = CreatedAt, false)),
+  constraint MachineAuditUpdate check on update (coalesce(new.UpdatedBy = context.Actor and new.UpdatedAt = context.Now
+    and new.CreatedBy = old.CreatedBy and new.CreatedAt = old.CreatedAt, false))
+) with context (Actor text null, Now text null);

@@ -30,4 +30,4 @@ Context: Needed before the first family (product-01 Q1 default: set up first). A
 - Q1. Should unused entries be deletable (a unit nobody uses, a misspelled class)? *Default: not in this slice; an unused entry does no harm.*
 - Q2. Should conversions between units of one dimension (mm ↔ m) be entered as a factor to the base unit, as the domain has it, or picked from a standard list? *Default: entered as a fraction to the base unit (1/1000 for mm when m is the base).*
 - Q3. Is a class prefix limited to one character, as in ATI? *Default: yes (domain/product.md §2).*
-- Q4. Should a new installation be offered a starting set of units, classes and operations? *Default: yes, a small one to adjust, never applied without asking.*
+- Q4. Should a new installation be offered a starting set of units, classes and operations? *Default: yes, a small one to adjust, never applied without asking.* Built (owner, November 2026: "a common set of units and classes, usable in any production environment"): offered when an installation or catalog is started, on by default (`packages/core/src/catalog/starter.ts`).

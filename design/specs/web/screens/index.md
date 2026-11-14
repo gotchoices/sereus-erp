@@ -14,7 +14,8 @@ Screens of the **web** target, with routes and status. Draft for the owner's rev
 | Parts | PartList | part-list.md | product-04 | happy, empty | generated (slice 4) |
 | Part | PartDetail | part-detail.md | product-04 | happy | generated (slice 4) |
 | Units, classes and operations | ReferenceData | reference-data.md | product-05, product-01 | happy, empty | generated (slice 5) |
-| Settings | Settings | settings.md | settings-01 | happy (memory mode: a notice) | generated (slice 6) |
+| Settings | Settings | settings.md | settings-01, 03–07 | happy (memory mode: a notice) | generated (slices 6–11) |
+| Setup | Setup | (consolidation only) | settings-02 | new, joining | generated (slice 7) |
 
 Dialogs (specified as components): NewFamily (on FamilyList), Release (on DraftEditor),
 Revise (on VersionView), ApprovePart (on FamilyDetail and PartList).

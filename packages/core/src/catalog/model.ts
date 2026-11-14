@@ -281,9 +281,39 @@ export interface StandardPackage {
   description: string | null;
 }
 
+// ── The strand and the party's machines (deployment.md §4, §7) ─────────────────
+
+/** What this catalog strand is for. */
+export interface About {
+  name: string;
+  /** The note of intent: what this strand is for. */
+  purpose: string;
+  company: string;
+  /** When it was first written, which is when the strand was founded; null on input. */
+  createdAt?: string | null;
+}
+
+/** A name a person gave one of the party's machines. */
+export interface MachineName {
+  peerId: string;
+  label: string;
+  updatedAt: string;
+}
+
 // ── The model ──────────────────────────────────────────────────────────────────
 
 export interface CatalogModel {
+  about: {
+    /** Null on a strand founded before the record existed. */
+    get(): Promise<Result<About | null>>;
+    set(about: About): Promise<Result<About>>;
+  };
+  machines: {
+    list(): Promise<Result<MachineName[]>>;
+    /** Name or rename a machine. */
+    name(peerId: string, label: string): Promise<Result<MachineName>>;
+  };
+
   units: {
     list(): Promise<Result<Unit[]>>;
     /** Insert or update by code. */

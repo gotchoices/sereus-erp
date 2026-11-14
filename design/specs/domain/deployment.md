@@ -30,10 +30,12 @@ not WyattERP's strands or data. A storage machine without a client still holds a
 * Whatever one client does here, the strand records only its effect. A strand founded, a
   machine admitted or an owner key added from one client MUST work exactly the same in every
   other.
-* Each client SHOULD offer the operations below, or say where they are done instead. The
-  `wyatt` command does what is WyattERP's own (founding and finding strands, export and
-  restore, §7, §9) and leaves machines and keys to `cadre` (`cadre enroll invite`,
-  `cadre owner-key`, `cadre start --owner`).
+* Each client SHOULD offer the operations below, or say where they are done instead. The web
+  app (Settings) and the `wyatt` command (apps/cli/README.md) both offer all of them, over one
+  implementation (`@wyatt/node`): a party started from either is joined, invited to and managed
+  from the other the same way. Invitations and owner grants are Sereus's own text
+  (`sereus-invite:1.…`, `sereus-owner-grant:1.…`), so one minted by Sereus's `cadre` command
+  for the same party is accepted too.
 
 ## 4. A party and its machines
 
@@ -49,9 +51,19 @@ not WyattERP's strands or data. A storage machine without a client still holds a
   machine shows it as syncing (settings-01), never as missing.
 * **Removing a machine** is an owner's act. It stops the machine from syncing and leaves owner
   keys alone: a removed machine that held an owner key keeps it until the key is removed too
-  (Sereus: What an owner key decides).
+  (Sereus: What an owner key decides). A machine cannot remove itself. The removed machine
+  learns of it only if the news reaches it before it is cut off (Sereus: best effort); either
+  way the others no longer trust it.
+* **Machine names.** Sereus knows a machine by its peer ID only. Each machine records the name
+  people gave it ("office server") in the catalog's `Machine` table when it starts or joins,
+  and an owner may rename any (catalog.qsql). *Open: names belong to the party, not to one
+  module; they move to a party-wide strand when one exists. Default: the catalog, which every
+  machine holds.*
 * **Redundancy.** A client SHOULD warn before removing the last machine that holds a copy of a
-  strand, and SHOULD suggest a storage machine to a party that has none.
+  strand, and SHOULD suggest a storage machine to a party that has none. *As built: a removal is
+  refused while the machine doing it has not finished copying every strand it knows (then the
+  machine being removed may hold the only copy), unless the owner accepts the loss. Whether a
+  third machine holds a copy is not known from here.*
 
 ## 5. Owner keys and recovery
 
@@ -85,7 +97,9 @@ confirms that another machine holds the copies.
   Sereus treats each as its own strand, so there is nothing to detect or reconcile.
 * **Every strand says what it is for.** Founding asks for a name and a note of intent ("Main
   catalog", "Catalog for the outdoor line, kept apart from the main one"), stored with the
-  strand and shown wherever strands are listed. It records intent that the strand's contents
+  strand (the catalog's `About` record: name, purpose, company) and shown wherever strands are
+  listed. Founding offers the starting set of units, classes and operations
+  (product-05 Q4), on by default. It records intent that the strand's contents
   would not show until it fills up, and it is how a person tells two of one module apart.
 * **Which one a client works in.** With one strand of a module, a client uses it. With several,
   it asks which, and remembers the choice per machine. A new machine of the party shows the
@@ -106,6 +120,13 @@ confirms that another machine holds the copies.
 * A machine that no other can reach still works alone and syncs when one can. A client SHOULD
   show whether this machine can be reached and, if not, what would make it so (settings-01
   shows its listen addresses).
+* **As built.** A server (`wyatt init`) listens on fixed ports (TCP 4101, WebSocket 4102),
+  announces the public name it is given, and serves as a circuit relay for the party's machines.
+  A desktop (the web app) listens on any free port and, when it joins, reserves a relay slot on
+  the machines its invitation names, so a laptop behind a home router is reachable through the
+  server with no port forwarding. Each strand runs its own libp2p node on a port chosen at start,
+  reached directly where the network allows and through the relay otherwise (Sereus:
+  strand-network-config). The settings live in the machine's `installation.json`.
 
 ## 9. Backup and restore
 
@@ -127,3 +148,9 @@ confirms that another machine holds the copies.
 * *Open:* speed. A strand write takes about a second today (STATUS.md, the ATI import), so a
   restore of thousands of records takes hours. Restore SHOULD write in large transactions,
   and the cost is a finding to take to Sereus.
+* **As built** (`@wyatt/core/catalog` backup.ts). The file is YAML: a header, counts, and every
+  row of every catalog table. A restore refuses a catalog that has families, parts or packages;
+  reference entries already there (a starting set) are replaced by the file's. Each family is
+  one transaction with its versions and definitions, components first; each minor revision is
+  one; parts go in batches of 200. `About` and `Machine` are exported but not restored: they
+  describe the restoring party.

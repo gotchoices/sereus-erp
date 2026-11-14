@@ -34,8 +34,12 @@ from ATI. See [docs/STATUS.md](docs/STATUS.md).
 ```
 yarn install
 yarn build && yarn test
-yarn cli modules
+yarn wyatt help
 ```
+
+**Standing up an installation:** a server runs the `wyatt` command
+([apps/cli/README.md](apps/cli/README.md), with a quickstart), and desktops run the web app and
+join it by invitation.
 
 ## Layout
 
@@ -57,8 +61,10 @@ packages/
   domain/        @wyatt/domain: IDs, quantity and money arithmetic
   bom-engine/    @wyatt/bom-engine: the parametric BOM engine (pure, deterministic)
   core/          @wyatt/core: control logic for each module's strand
+  node/          @wyatt/node: one installation on a machine (Sereus node, keys, folder), for every client
 apps/
-  cli/           @wyatt/cli: headless client
+  cli/           @wyatt/cli: the wyatt command, for servers and terminals
+  web/           @wyatt/web: the web app (SvelteKit)
 tools/legacy/    scripts used to analyze the ATI data
 data/            local-only ATI data extract (git-ignored)
 ```
@@ -72,9 +78,13 @@ yarn install && yarn build            # the packages the app uses
 cd apps/web && yarn dev               # http://localhost:5173, on a real Sereus node
 ```
 
-The node keeps its keys and data in `apps/web/.wyatt/` (git-ignored). On first start it
-founds a catalog strand and fills it with a small sample hydroponics catalog. Delete that
-folder to start over. `yarn dev:mock` runs on an in-memory catalog instead, with
+The node keeps its keys and data in `apps/web/.wyatt/` (git-ignored; `WYATT_HOME` sets
+another folder, `WYATT_PORT` and `WYATT_PUBLIC` its network). `yarn dev` sets
+`WYATT_SEED=sample`, so on first start it starts a throwaway installation with a small sample
+catalog. For real use, `yarn app` runs it on `~/.wyatt-web` at http://localhost:5180 with no
+sample. Without it (`yarn build && yarn start`, or `WYATT_SEED=none`), a new folder opens on
+the first-run page: start a new installation, or join one by invitation. Delete the folder to
+start over. `yarn dev:mock` runs on an in-memory catalog instead, with
 `?variant=happy|empty|error` for review states.
 
 `yarn dev_loop [port]` (default 5174) runs the dev server and starts it again whenever it
