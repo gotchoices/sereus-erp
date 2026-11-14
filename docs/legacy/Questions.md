@@ -178,3 +178,31 @@ settings-02 to settings-07; answer inline if a default is wrong.
     a name and a note of what it is for; with several, the app asks which to work in
     (deployment.md §7, settings-05).
 
+
+## G. Engineering documentation (November 2026)
+
+Background and the working defaults are in [engineering-docs.md](../engineering-docs.md); what
+ATI had is in [ati-engineering-docs.md](ati-engineering-docs.md). Answer inline if a default is
+wrong.
+
+38. **Manuals beyond the shop:** should a family carry installation, owner's and shipping
+    documentation as well as build notes, with a package's manual composed from its
+    components' manuals through the explosion (engineering-docs.md §3.1)? *Default: yes, with
+    `build`, `install`, `operate` and `ship` manuals; `sale` left out until there is a need.*
+39. **Shared procedures:** do you want ATI's includes back, as catalog procedures (painting,
+    priming, torque practice) with their own revision history that notes include by name?
+    *Default: yes.*
+40. **Defining documents:** should a CAD model or CAM template that defines the product be
+    frozen with the version, so changing it needs a new version, while figures and drawings
+    keep changing by minor revision (§3.3)? *Default: yes.*
+41. **File storage:** should files be kept by content hash on the storage machines and fetched
+    from any member that has them, raised with Sereus as a requirement (§4)? Or do you have
+    other plans for files in Sereus? *Default: content hashes; external URLs until then.*
+42. **CAD tool:** is FreeCAD the right first generator, behind a tool-neutral contract (§6.3)?
+    Do you already have FreeCAD models of hydroponics parts? *Default: FreeCAD first.*
+43. **Shop floor:** will packets mostly be printed, or read and filled in on tablets?
+    *Default: both. Packets are printable HTML, and QC results are recorded on a device where
+    there is one.*
+44. **What the shop makes:** which processes matter first for the hydroponics line: 3D
+    printing, laser or router cutting, CNC machining, plumbing assembly, electronics? This sets
+    which outputs come first (§6.5, §7). *Default: 3D printing and DXF for cutting.*

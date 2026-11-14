@@ -208,7 +208,19 @@ These are worth writing up as Sereus requirements.
 
   Operations never needs to know about payments.
 
-## 6. Why build rather than adopt
+## 6. Engineering documentation (exploration)
+
+ATI documented products well beyond the BOM: notes with live part summaries and BOMs, document
+classes for assembly, installation, shipping and the owner's manual, and burn-table programs
+generated from each part's parameters. WyattERP so far keeps only the core: notes and QC
+criteria per routing step, and documents versioned by minor revision. The working direction is
+to keep ATI's reach, with parameter values in notes, manuals that compose through the
+explosion, and CAD and CAM output generated per configuration, under the same versioning as the
+rest of the catalog. It is not decided yet. The exploration, with FreeCAD findings and a
+suggested order, is in [engineering-docs.md](engineering-docs.md). The open questions are
+Q38–Q44.
+
+## 7. Why build rather than adopt
 
 The survey in [alternatives.md](alternatives.md) found no open-source ERP with a parametric,
 scripted BOM engine in its core. ERPNext, Odoo and InvenTree do everything else well, and

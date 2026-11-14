@@ -238,7 +238,9 @@ needs no cross-strand joins, postings or Bonum.
    * ⬜ Test data: import the ATI 2014 catalog into a local-only strand once the first screens
      work. Never into a strand shared with others, and never in committed screenshots.
    * ⬜ Before the UI: three prodim topics product.md lacks: generic and custom "reserve"
-     basenames, document templates, finding documents.
+     basenames, document templates, finding documents. The last two are part of the
+     engineering documentation exploration ([engineering-docs.md](engineering-docs.md),
+     Q38–Q44), which awaits the owner's answers.
 
 After these, the build order is:
 1. catalog module (C above);
@@ -264,6 +266,7 @@ After these, the build order is:
 | BOM engine prototype against the 2014 corpus | ⬜ next |
 | Catalog schema ([domain/catalog.qsql](../design/specs/domain/catalog.qsql)), tested in memory and on a strand | ✅ |
 | Catalog model (`@wyatt/core/catalog`), one contract suite in memory and on a strand | ✅ |
+| Engineering documentation: study of ATI's ([legacy/ati-engineering-docs.md](legacy/ati-engineering-docs.md)) and a proposal ([engineering-docs.md](engineering-docs.md)) | 🔄 awaiting the owner: Q38–Q44 |
 | Executable schemas of the other modules | ⬜ |
 | Appeus project setup (stories, UI specs per target) | ⬜ |
 
@@ -376,6 +379,18 @@ The reasoning is in [Design.md](Design.md).
     they move into schema constraints where Quereus can express them.
   * **Open:** whether each WyattERP module is its own sApp (the working default; one schema
     per strand) or one sApp with several schemas.
+* ❓ **Engineering documentation** ([engineering-docs.md](engineering-docs.md), Q38–Q44).
+  The catalog has notes and QC per routing step, and documents versioned by minor revision,
+  but nothing parameter-aware and nothing that renders. Proposed: manuals beyond the shop
+  (installation, owner's, shipping), composed through the explosion; values and live blocks
+  in notes; QC limits as expressions; documents flagged as defining or illustrative; run
+  packets frozen at release; CAD and CAM output from a tool-neutral generator, FreeCAD
+  first. The first step (`traveler()`, packets, values in notes) needs no new
+  infrastructure.
+* ⬜ **File storage.** `Document.ContentRef` is a free-text link with no storage behind it,
+  and Sereus has none. Proposed: content-hash references with the bytes on storage machines
+  ([engineering-docs.md](engineering-docs.md) §4). It goes to
+  [sereus-requirements.md](sereus-requirements.md) once the owner agrees (Q41).
 * 🔮 **Cross-strand views** as a Sereus enhancement (requirements to write up for the Sereus
   team).
 * ❓ Costing: FIFO layers are specified; moving average is open

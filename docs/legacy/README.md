@@ -20,8 +20,9 @@ quoted, referenced or reused freely where relevant.
 | Document | Contents |
 |---|---|
 | [Findings.md](Findings.md) | What ATI was, what the 2014 data shows, where its logic lived, lessons (keep / fix / drop), and an assessment of the MTR ledger against mainstream designs |
-| [Questions.md](Questions.md) | The owner's answers, Q1–Q33: the source of most design decisions |
+| [Questions.md](Questions.md) | The owner's answers, Q1–Q44: the source of most design decisions |
 | [ati-mfg-model.md](ati-mfg-model.md) | Detailed technical model: tables, MTR types and statuses, planning formulas, purchasing steps |
+| [ati-engineering-docs.md](ati-engineering-docs.md) | Document store, the noedit notes editor, and the parametric burn programs (bedit) |
 | [ati-framework.md](ati-framework.md) | The `dbm` schema tooling and Tcl framework, and the wyseman/wylib/wyselib lineage |
 | [ati-index.md](ati-index.md) | Directory index of `old/ati` and related trees, with sensitive paths flagged |
 | [bom-scripting-js.md](bom-scripting-js.md) | Trial port of real ATI BOM scripts to JavaScript (the evidence for the engine's language decision) |
@@ -39,6 +40,9 @@ Paths are relative to the workspace root (the directory that contains `ser/` and
 | BOM spreadsheet data (2000) | `old/ati/src/dbm/work/prd_spread.sql` | Real formula and script examples, about 1,200 families |
 | BOM evaluator | `old/ati/src/tcl/lib/spread.tcl` | The core of the parametric engine; the basis for the Tcl oracle |
 | Product manager | `old/ati/src/tcl/prodim/{prodim,prodim.man,invman.tcl}` | The manual is the best conceptual introduction |
+| Product documents | `old/ati/src/dbm/prd_doc.sch`, `old/ati/src/tcl/lib/pdoc.tcl` | Store, check-out, per-part packets (`view_bp`) |
+| Notes editor | `old/ati/src/tcl/noedit/{noedit,noedit.sgml,etw*.tcl}` | The manual (`noedit.sgml`) describes every block |
+| Burn programs | `old/ati/src/tcl/bedit/` (manual `bedit.sgml`, machine headers in `bm4/`), programs in `old/ati/doc/fig/brn` | Parametric m4 programs and per-machine headers |
 | Order tool | `old/ati/src/tcl/ord/{ordtool,ordtool.man}` | `use_pkg`, `order_commit` |
 | Purchasing | `old/ati/src/tcl/potool/{purchase.tcl,purchase.man,potool,rectool.tcl,wmclose.tcl}` | `purchase.man` describes the purchasing round step by step |
 | Vendor bids | `old/ati/src/tcl/vendim/{vendbid,vendbid.man,vendim}` | The vendor-facing program |
